@@ -148,16 +148,16 @@ layout: default
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const catFilter = urlParams.get('cat');
-    const listMode = document.getElementById('category-list-mode');
+    
     const gridMode = document.getElementById('product-grid');
     const backNav = document.getElementById('back-nav');
     const displayTitle = document.getElementById('display-title');
     const productItems = document.querySelectorAll('.product-item');
 
     if (catFilter) {
+        // 顯示產品 Grid
         gridMode.style.display = 'flex';
         backNav.style.display = 'block';
-        listMode.style.display = 'none';
 
         let categoryName = catFilter;
         let matchCount = 0;
@@ -173,10 +173,8 @@ layout: default
         });
         displayTitle.innerText = categoryName;
     } else {
-        gridMode.style.display = 'none';
-        backNav.style.display = 'none';
-        listMode.style.display = 'block';
-        displayTitle.innerText = "Product Categories";
+        // 🚩 重點：如果沒有參數，自動導向到 categories.html
+        window.location.href = 'categories.html';
     }
 </script>
 </body>
