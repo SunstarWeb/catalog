@@ -29,14 +29,16 @@ layout: null
         }
 
         .product-img-container { 
-            height: 280px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #fff; 
-            padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
+    height: 280px; 
+    min-height: 280px; /* 強制最小高度 */
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    background: #fff; 
+    overflow: hidden;
+    /* 加入一個隱形的佔位符 */
+    position: relative;
+}
         .product-img { max-height: 100%; max-width: 100%; object-fit: contain; }
 
         /* Badges */
