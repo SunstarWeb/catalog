@@ -9,26 +9,61 @@ layout: default
     <title>Product Catalog - Sunstar Industries Inc.</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --gti-red: #d9534f; }
-        .category-header { background: #212529; color: white; padding: 60px 0; margin-bottom: 40px; }
-        .product-card { border: 1px solid #eee; border-radius: 0; transition: 0.3s; height: 100%; position: relative; }
-        .product-card:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.1); transform: translateY(-3px); }
-        .product-img-container { height: 280px; display: flex; align-items: center; justify-content: center; background: #fdfdfd; padding: 15px; }
+        :root { --sunstar-red: #d9534f; --sunstar-blue: #0d6efd; }
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .category-header { background: #212529; color: white; padding: 40px 0; margin-bottom: 30px; }
+        
+        .product-card { 
+            border: 1px solid #eee; 
+            border-radius: 0; 
+            transition: all 0.3s ease; 
+            height: 100%; 
+            position: relative; 
+            background: #fff;
+        }
+        .product-card:hover { 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1); 
+            transform: translateY(-5px); 
+            z-index: 5;
+        }
+
+        .product-img-container { 
+            height: 280px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background: #fff; 
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
         .product-img { max-height: 100%; max-width: 100%; object-fit: contain; }
-        .badge-new { background-color: var(--gti-red); color: white; position: absolute; top: 10px; right: 10px; padding: 5px 12px; font-weight: bold; z-index: 10; }
-        .spec-label { font-size: 0.75rem; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin-bottom: 2px; }
-        .spec-value { font-weight: 600; color: #333; }
-        .price-tag { color: #0d6efd; font-size: 1.1rem; font-weight: 700; }
-        .list-group-item { padding: 15px 20px; border-radius: 0 !important; border-left: 4px solid transparent; }
-        .list-group-item:hover { border-left: 4px solid var(--gti-red); background-color: #f8f9fa; }
+
+        /* Badges */
+        .badge-status { position: absolute; top: 12px; right: 12px; padding: 5px 12px; font-weight: 700; z-index: 10; font-size: 0.75rem; text-transform: uppercase; }
+        .badge-new { background-color: var(--sunstar-red); color: white; }
+        .badge-old { background-color: #6c757d; color: white; }
+        .page-tag { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); color: white; padding: 2px 8px; font-size: 0.7rem; z-index: 10; font-weight: 600; }
+
+        /* Specs Table Style */
+        .spec-table { width: 100%; font-size: 0.8rem; margin-top: 10px; border-collapse: collapse; }
+        .spec-table td { padding: 6px 4px; border-bottom: 1px solid #f0f0f0; }
+        .spec-label { color: #888; text-transform: uppercase; font-weight: 700; width: 40%; }
+        .spec-value { color: #333; font-weight: 600; text-align: right; }
+        
+        .features-area { font-size: 0.75rem; color: #555; background: #fff9e6; border-left: 3px solid #f0ad4e; padding: 8px; margin-top: 12px; min-height: 60px; }
+        .price-text { font-size: 1.3rem; font-weight: 800; color: var(--sunstar-blue); }
+        
+        /* List Mode Style */
+        .list-group-item { border-radius: 0 !important; border-left: 5px solid transparent; font-weight: 600; padding: 1.2rem; }
+        .list-group-item:hover { border-left-color: var(--sunstar-red); background-color: #fdfdfd; }
     </style>
 </head>
 <body>
 
-<div class="category-header text-center">
+<div class="category-header text-center shadow-sm">
     <div class="container">
-        <h1 id="display-title" class="display-5 fw-bold text-uppercase mb-2">Full Collection</h1>
-        <p class="lead text-white-50">Sunstar Industries Inc. | Professional Seasonal Decorations</p>
+        <h1 id="display-title" class="fw-bold text-uppercase mb-1">Product Catalog</h1>
+        <p class="lead text-white-50 small mb-0">Sunstar Industries Inc. Official Wholesale Gallery</p>
     </div>
 </div>
 
@@ -36,20 +71,22 @@ layout: default
     
     <div id="category-list-mode" style="display: none;">
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <h3 class="mb-4 text-center text-uppercase fw-bold">Browse by Category</h3>
-                <div class="list-group shadow-sm">
-                    {% assign sorted_products = site.data.products | sort: "GroupDesc" %}
-                    {% assign last_cat = "" %}
-                    {% for item in sorted_products %}
-                        {% if item.GroupDesc != last_cat %}
-                            <a href="catalog.html?cat={{ item.GroupCode }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                <span>{{ item.GroupDesc }}</span>
-                                <span class="badge bg-secondary rounded-pill">View Items</span>
-                            </a>
-                            {% assign last_cat = item.GroupDesc %}
-                        {% endif %}
-                    {% endfor %}
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white py-3 border-bottom"><h5 class="mb-0 fw-bold text-muted">Browse Categories</h5></div>
+                    <div class="list-group list-group-flush">
+                        {% assign sorted_products = site.data.products | sort: "GroupDesc" %}
+                        {% assign last_cat = "" %}
+                        {% for item in sorted_products %}
+                            {% if item.GroupDesc != last_cat %}
+                                <a href="catalog.html?cat={{ item.GroupCode }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <span>{{ item.GroupDesc }}</span>
+                                    <span class="text-primary small">View Items &raquo;</span>
+                                </a>
+                                {% assign last_cat = item.GroupDesc %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -57,49 +94,39 @@ layout: default
 
     <div class="row g-4" id="product-grid" style="display: none;">
         {% for item in site.data.products %}
-        <div class="col-sm-6 col-md-4 col-lg-3 product-item" 
-             data-category="{{ item.GroupCode }}" 
-             data-desc="{{ item.GroupDesc }}">
+        <div class="col-sm-6 col-md-4 col-lg-3 product-item" data-category="{{ item.GroupCode }}" data-desc="{{ item.GroupDesc }}">
             
             <div class="card product-card">
-                {% if item['OLD/New'] == 'NEW' %}
-                <div class="badge-new">NEW</div>
+                <div class="page-tag">Pg: {{ item.Page }}</div>
+                
+                {% if item.OLDNew == 'NEW' %}
+                    <div class="badge-status badge-new">NEW</div>
+                {% else %}
+                    <div class="badge-status badge-old">RE-ORDER</div>
                 {% endif %}
                 
                 <div class="product-img-container">
-                    <img src="assets/products/{{ item['Item#'] }}.jpg" 
-                         class="product-img" 
-                         alt="{{ item.Description }}"
+                    <img src="assets/products/{{ item.Item }}.jpg" class="product-img" alt="{{ item.Description }}"
                          onerror="this.src='https://via.placeholder.com/400x400?text=Image+Coming+Soon'">
                 </div>
                 
                 <div class="card-body d-flex flex-column">
-                    <div class="mb-2">
-                        <span class="badge bg-light text-dark border">Item #{{ item['Item#'] }}</span>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-secondary">#{{ item.Item }}</span>
+                        <div class="price-text">${{ item.Price }}</div>
                     </div>
-                    <h6 class="card-title fw-bold mb-3" style="min-height: 40px;">{{ item.Description }}</h6>
                     
-                    <div class="mt-auto border-top pt-3">
-                        <div class="row mb-2">
-                            <div class="col-6">
-                                <div class="spec-label">Case Pack</div>
-                                <div class="spec-value">{{ item.CsPk }}</div>
-                            </div>
-                            <div class="col-6 text-end">
-                                <div class="spec-label">Wholesale</div>
-                                <div class="price-tag">${{ item.Price }}</div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="spec-label">Size (L x W x H)</div>
-                                <div class="small spec-value text-muted">{{ item['Product Size'] }}</div>
-                            </div>
-                        </div>
-                        <div class="mt-3">
-                            <div class="spec-label">Specs</div>
-                            <div class="small text-muted" style="font-size: 0.75rem;">{{ item.Features }}</div>
-                        </div>
+                    <h6 class="card-title fw-bold mb-3" style="min-height: 40px; line-height: 1.3;">{{ item.Description }}</h6>
+                    
+                    <table class="spec-table">
+                        <tr><td class="spec-label">Pack</td><td class="spec-value">{{ item.CsPk }} PCS</td></tr>
+                        <tr><td class="spec-label">Batteries</td><td class="spec-value">{{ item.Batteries | default: 'N/A' }}</td></tr>
+                        <tr><td class="spec-label">Size (in)</td><td class="spec-value">{{ item['Product Size'] }}</td></tr>
+                    </table>
+
+                    <div class="features-area mt-3">
+                        <div style="font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: #a57c00; margin-bottom: 3px;">Special Features</div>
+                        {{ item.Features | replace: ";", " • " }}
                     </div>
                 </div>
             </div>
@@ -108,24 +135,19 @@ layout: default
     </div>
 
     <div id="back-nav" class="text-center mt-5" style="display: none;">
-        <hr class="mb-4">
-        <a href="catalog.html" class="btn btn-outline-dark px-5">← Back to All Categories</a>
+        <a href="catalog.html" class="btn btn-dark px-5 py-2">← Back to All Categories</a>
     </div>
-
 </div>
 
-<footer class="py-5 bg-dark text-white-50 text-center mt-5">
+<footer class="py-4 bg-dark text-white-50 text-center mt-5">
     <div class="container">
-        <p class="mb-0">&copy; 2024 Sunstar Industries Inc. All Rights Reserved.</p>
-        <small>For wholesale inquiries, please contact our sales representative.</small>
+        <p class="mb-0 small">&copy; 2026 Sunstar Industries Inc. | Wholesale Seasonal Decor</p>
     </div>
 </footer>
 
 <script>
-    // URL Parameter Handling
     const urlParams = new URLSearchParams(window.location.search);
     const catFilter = urlParams.get('cat');
-    
     const listMode = document.getElementById('category-list-mode');
     const gridMode = document.getElementById('product-grid');
     const backNav = document.getElementById('back-nav');
@@ -133,7 +155,6 @@ layout: default
     const productItems = document.querySelectorAll('.product-item');
 
     if (catFilter) {
-        // --- DISPLAY GRID MODE ---
         gridMode.style.display = 'flex';
         backNav.style.display = 'block';
         listMode.style.display = 'none';
@@ -144,25 +165,19 @@ layout: default
         productItems.forEach(item => {
             if (item.getAttribute('data-category') === catFilter) {
                 item.style.display = 'block';
-                // Grab the readable description from the first matching item
                 if(matchCount === 0) categoryName = item.getAttribute('data-desc');
                 matchCount++;
             } else {
                 item.style.display = 'none';
             }
         });
-
         displayTitle.innerText = categoryName;
-
     } else {
-        // --- DISPLAY LIST MODE ---
         gridMode.style.display = 'none';
         backNav.style.display = 'none';
         listMode.style.display = 'block';
         displayTitle.innerText = "Product Categories";
     }
 </script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
