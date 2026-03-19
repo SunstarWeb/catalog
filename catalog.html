@@ -84,9 +84,9 @@ layout: null
               <h6 class="card-title fw-bold mb-3" style="min-height: 40px;">{{ item.Description }}</h6>
               
               <table class="spec-table">
-                  <tr><td class="spec-label">Pack</td><td class="spec-value">{{ item.CsPk }} PCS</td></tr>
-                  <tr><td class="spec-label">Batteries</td><td class="spec-value">{{ item.Batteries | default: 'N/A' }}</td></tr>
+                  <tr><td class="spec-label">Pack</td><td class="spec-value">{{ item.CsPk }} PCS</td></tr>                  
                   <tr><td class="spec-label">Size (in)</td><td class="spec-value">{{ item['Product Size'] }}</td></tr>
+                  <tr><td class="spec-label">Batteries</td><td class="spec-value">{{ item.Batteries | default: 'N/A' }}</td></tr>
               </table>
 
               <div class="mt-3 p-2 border-start border-warning border-3 bg-light" style="font-size: 0.75rem;">
