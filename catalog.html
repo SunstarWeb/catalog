@@ -56,45 +56,47 @@ layout: null
 <div class="container mb-5">
     <div class="row g-4" id="product-grid">
         {% for item in site.data.products %}
-        <div class="col-sm-6 col-md-4 col-lg-3 product-item" data-category="{{ item.GroupCode }}" data-desc="{{ item.GroupDesc }}">
-            <div class="card product-card">
-                <div class="page-tag">Pg: {{ item.Page }}</div>
-                
-                {% if item.OLDNew == 'NEW' %}
-                    <div class="badge-status badge-new">NEW</div>
-                {% else %}
-                    <div class="badge-status badge-old">RE-ORDER</div>
-                {% endif %}
-                
-                <div class="product-img-container">
-                    <img src="assets/products/{{ item.Item }}.jpg" 
-                         class="product-img" 
-                         alt="{{ item.Description }}"
-                         onerror="this.src='https://via.placeholder.com/400x400?text=Item+{{ item.Item }}'">
-                </div>
-                
-                <div class="card-body d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="badge bg-secondary">#{{ item.Item }}</span>
-                        <div class="price-text">${{ item.Price }}</div>
-                    </div>
-                    
-                    <h6 class="card-title fw-bold mb-3" style="min-height: 40px;">{{ item.Description }}</h6>
-                    
-                    <table class="spec-table">
-                        <tr><td class="spec-label">Pack</td><td class="spec-value">{{ item.CsPk }} PCS</td></tr>
-                        <tr><td class="spec-label">Batteries</td><td class="spec-value">{{ item.Batteries | default: 'N/A' }}</td></tr>
-                        <tr><td class="spec-label">Size (in)</td><td class="spec-value">{{ item['Product Size'] }}</td></tr>
-                    </table>
+  {% assign product_id = item.Item | default: item[0] %}
 
-                    <div class="mt-3 p-2 border-start border-warning border-3 bg-light" style="font-size: 0.75rem;">
-                        <b class="text-uppercase" style="font-size: 0.6rem; color: #a57c00;">Features</b><br>
-                        {{ item.Features | replace: ";", " • " }}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+  <div class="col-sm-6 col-md-4 col-lg-3 product-item" data-category="{{ item.GroupCode }}" data-desc="{{ item.GroupDesc }}">
+      <div class="card product-card">
+          <div class="page-tag">Pg: {{ item.Page }}</div>
+          
+          {% if item.OLDNew == 'NEW' %}
+              <div class="badge-status badge-new">NEW</div>
+          {% else %}
+              <div class="badge-status badge-old">RE-ORDER</div>
+          {% endif %}
+          
+          <div class="product-img-container">
+              <img src="assets/products/{{ product_id }}.jpg" 
+                   class="product-img" 
+                   alt="{{ item.Description }}"
+                   onerror="this.src='https://via.placeholder.com/400x400?text=Missing+ID+{{ product_id }}'">
+          </div>
+          
+          <div class="card-body d-flex flex-column">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                  <span class="badge bg-secondary">#{{ product_id }}</span>
+                  <div class="price-text">${{ item.Price }}</div>
+              </div>
+              
+              <h6 class="card-title fw-bold mb-3" style="min-height: 40px;">{{ item.Description }}</h6>
+              
+              <table class="spec-table">
+                  <tr><td class="spec-label">Pack</td><td class="spec-value">{{ item.CsPk }} PCS</td></tr>
+                  <tr><td class="spec-label">Batteries</td><td class="spec-value">{{ item.Batteries | default: 'N/A' }}</td></tr>
+                  <tr><td class="spec-label">Size (in)</td><td class="spec-value">{{ item['Product Size'] }}</td></tr>
+              </table>
+
+              <div class="mt-3 p-2 border-start border-warning border-3 bg-light" style="font-size: 0.75rem;">
+                  <b class="text-uppercase" style="font-size: 0.6rem; color: #a57c00;">Features</b><br>
+                  {{ item.Features | replace: ";", " • " }}
+              </div>
+          </div>
+      </div>
+  </div>
+{% endfor %}
     </div>
 
     <div id="back-nav" class="text-center mt-5" style="display: none;">
