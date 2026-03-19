@@ -1,0 +1,96 @@
+---
+layout: default
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog - Sunstar Industries Inc.</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-card { border: 1px solid #eee; transition: 0.3s; height: 100%; }
+        .product-card:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .product-img { height: 250px; object-fit: contain; background: #f9f9f9; padding: 10px; }
+        .badge-new { background-color: #d9534f; position: absolute; top: 10px; right: 10px; }
+        .spec-label { font-weight: bold; font-size: 0.85rem; color: #666; }
+        .category-header { background: #343a40; color: white; padding: 40px 0; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+
+<div class="category-header text-center">
+    <div class="container">
+        <h1 id="display-cat-name" class="text-uppercase">All Products</h1>
+        <p class="lead">Sunstar Industries Inc. Quality Seasonal Decor</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row g-4" id="product-grid">
+        {% for item in site.data.products %}
+        <div class="col-md-4 col-lg-3 product-item" data-category="{{ item.GroupCode }}">
+            <div class="card product-card">
+                {% if item.OLD/New == 'NEW' %}
+                <span class="badge badge-new">NEW</span>
+                {% endif %}
+                
+                <img src="assets/products/{{ item['Item#'] }}.jpg" 
+                     class="card-img p-2" 
+                     onerror="this.src='https://via.placeholder.com/300x300?text=Image+Coming+Soon'"
+                     alt="{{ item.Description }}">
+                
+                <div class="card-body">
+                    <small class="text-danger fw-bold">Item #{{ item['Item#'] }}</small>
+                    <h6 class="card-title fw-bold mt-1">{{ item.Description }}</h6>
+                    <hr>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="spec-label">Case Pack</div>
+                            <div>{{ item.CsPk }}</div>
+                        </div>
+                        <div class="col-6 text-end">
+                            <div class="spec-label">Price</div>
+                            <div class="text-primary fw-bold">${{ item.Price }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <div class="spec-label">Size (in)</div>
+                        <div class="small text-muted">{{ item['Product Size'] }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    // 簡單的客戶端過濾邏輯
+    const urlParams = new URLSearchParams(window.location.search);
+    const catFilter = urlParams.get('cat');
+    const items = document.querySelectorAll('.product-item');
+    const displayTitle = document.getElementById('display-cat-name');
+
+    if (catFilter) {
+        let foundAny = false;
+        items.forEach(item => {
+            if (item.getAttribute('data-category') === catFilter) {
+                item.style.display = 'block';
+                foundAny = true;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // 更新標題 (從第一個找到的產品抓取 GroupDesc)
+        if (foundAny) {
+            const firstMatch = document.querySelector(`.product-item[data-category="${catFilter}"] .card-title`);
+            // 這裡可以根據你的需求優化顯示名稱
+            displayTitle.innerText = catFilter.replace(/-/g, ' '); 
+        }
+    }
+</script>
+
+</body>
+</html>
