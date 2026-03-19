@@ -1,18 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Halloween Catalog</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTI Trading - Halloween Animatronics & Props Catalog</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Hero Section Styling */
+        .hero-section {
+            /* ⚠️ Assumes image is at: /assets/cover.jpg */
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5)), url('/assets/cover.jpg') no-repeat center center;
+            background-size: cover;
+            height: 85vh; /* Occupies 85% of screen height */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+        }
+
+        .category-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 1px solid #eee;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border-color: #ddd;
+        }
+
+        .btn-gti {
+            background-color: #d9534f; /* Danger red for emphasis */
+            color: white;
+            border-radius: 0;
+            padding: 15px 40px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .btn-gti:hover {
+            background-color: #c9302c;
+            color: white;
+        }
+    </style>
 </head>
-<body class="home">
+<body>
 
-  <div class="hero">
-    <img src="assets/cover.jpg" class="hero-img">
-    <div class="overlay">
-      <h1>Halloween Collection</h1>
-      <a href="catalog.html" class="btn">Browse Our Latest Catalog</a>
-    </div>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand font-weight-bold" href="/">GTI Trading</a>
+    <div class="navbar-nav ms-auto">
+      <a class="nav-link active" href="/index.html">Home</a>
+      <a class="nav-link" href="#catalog-section">Catalog</a> <a class="nav-link" href="/contact.html">Contact Us</a> </div>
   </div>
+</nav>
 
+<header class="hero-section">
+    <div class="container">
+        <h1 class="hero-title mb-4">Halloween<br>Animatronics</h1>
+        <p class="lead mb-5 text-white-50">Explore our professional-grade, high-quality holiday props and decorations.</p>
+        <a href="#catalog-section" class="btn btn-gti btn-lg">Browse Catalog</a>
+    </div>
+</header>
+
+<section id="catalog-section" class="py-5 bg-white">
+    <div class="container">
+        <h2 class="text-center mb-5 font-weight-bold text-uppercase">Featured Categories</h2>
+        
+        <div class="row g-4">
+            
+            <div class="col-md-4">
+                <div class="card h-100 category-card" onclick="location.href='/catalog.html?cat=animatronics'">
+                    <img src="https://via.placeholder.com/400x250?text=Animatronics" class="card-img-top" alt="Animatronics">
+                    <div class="card-body text-center">
+                        <h5 class="card-title font-weight-bold text-uppercase">Animatronics</h5>
+                        <p class="card-text text-muted">Life-size, moving, and scary props.</p>
+                        <a href="/catalog.html?cat=animatronics" class="btn btn-outline-dark btn-sm text-uppercase">View Items</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 category-card" onclick="location.href='/catalog.html?cat=statues'">
+                    <img src="https://via.placeholder.com/400x250?text=Statues" class="card-img-top" alt="Statues">
+                    <div class="card-body text-center">
+                        <h5 class="card-title font-weight-bold text-uppercase">Static Statues</h5>
+                        <p class="card-text text-muted">High-detail, non-moving decorations.</p>
+                        <a href="/catalog.html?cat=statues" class="btn btn-outline-dark btn-sm text-uppercase">View Items</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100 category-card" onclick="location.href='/catalog.html?cat=props'">
+                    <img src="https://via.placeholder.com/400x250?text=Props" class="card-img-top" alt="Props">
+                    <div class="card-body text-center">
+                        <h5 class="card-title font-weight-bold text-uppercase">Small Props</h5>
+                        <p class="card-text text-muted">Essential details for every scene.</p>
+                        <a href="/catalog.html?cat=props" class="btn btn-outline-dark btn-sm text-uppercase">View Items</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<footer class="py-4 bg-dark text-white-50 text-center">
+  <div class="container">
+    <p>&copy; 2024 GTI Trading Co., Ltd. All Rights Reserved.</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
