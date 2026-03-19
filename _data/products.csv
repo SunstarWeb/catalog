@@ -1,4 +1,4 @@
-﻿Item#,Description,CsPk,OLD/New,2026 Page,Price,GroupCode,GroupDesc,Features,Batteries,Product Size
+﻿Item,Description,CsPk,OLDNew,Page,Price,GroupCode,GroupDesc,Features,Batteries,Product Size
 67258,66in Standing Stretching Reaper,1,NEW,2,77.2,STND-ANIM,STANDING ANIMATED,Light:Yes; Sound:Yes; Animated:No,AA x 3,47.2x7.9x66.1
 82327,Small Faceless Spectre in Chains,6,OLD,2,17.6,MHANG-ANIM,MED HANGING ANIMATED,Light:Yes; Sound:Yes; Animated:No,AA x 3,35.4x35.4x0
 66721,5.57ft Standing Animated Winged Reaper,1,OLD,2,96.05,STND-ANIM,STANDING ANIMATED,Light:Yes; Sound:Yes; Animated:Yes,AA x 4,47.2x7.1x66.9
