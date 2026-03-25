@@ -112,7 +112,24 @@ layout: null
     const displayTitle = document.getElementById('display-title');
     const productItems = document.querySelectorAll('.product-item');
 
-    if (catFilter) {
+    const searchFilter = urlParams.get('search');
+
+    if (searchFilter) {
+        gridMode.style.display = 'flex';
+        backNav.style.display = 'block';
+        const q = searchFilter.toLowerCase();
+        let matchCount = 0;
+        productItems.forEach(item => {
+            const text = item.innerText.toLowerCase();
+            if (text.includes(q)) {
+                item.style.display = 'block';
+                matchCount++;
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        displayTitle.innerText = 'Search: "' + searchFilter + '" (' + matchCount + ' results)';
+    } else if (catFilter) {
         gridMode.style.display = 'flex';
         backNav.style.display = 'block';
         let foundTitle = catFilter;
