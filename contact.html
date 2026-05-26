@@ -104,58 +104,44 @@ layout: null
         </div>
 
         <div class="col-lg-7">
-            <h5 class="fw-bold mb-3 text-uppercase small" style="letter-spacing: 1px;">Our Showrooms</h5>
-            
-            <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="pills-dallas-tab" data-bs-toggle="pill" data-bs-target="#pills-dallas" type="button" role="tab" aria-controls="pills-dallas" aria-selected="true">
-                        Dallas Showroom
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="pills-irving-tab" data-bs-toggle="pill" data-bs-target="#pills-irving" type="button" role="tab" aria-controls="pills-irving" aria-selected="false">
-                        Irving Showroom
-                    </button>
-                </li>
-            </ul>
-            
-            <div class="tab-content" id="pills-tabContent">
-                <div class="tab-pane fade show active" id="pills-dallas" role="tabpanel" aria-labelledby="pills-dallas-tab">
+    <h5 class="fw-bold mb-3 text-uppercase small" style="letter-spacing: 1px;">Our Showrooms</h5>
+    
+    <div class="accordion" id="showroomAccordion">
+        <div class="accordion-item rounded-0 mb-3 border">
+            <h2 class="accordion-header" id="headingDallas">
+                <button class="accordion-button fw-bold text-white fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDallas" aria-expanded="true" aria-controls="collapseDallas" style="background-color: var(--sunstar-red); box-shadow: none;">
+                    📍 Dallas Showroom (Click to view)
+                </button>
+            </h2>
+            <div id="collapseDallas" class="accordion-collapse collapse show" aria-labelledby="headingDallas" data-bs-parent="#showroomAccordion">
+                <div class="accordion-body bg-white">
                     <div class="mb-2 small text-muted">
                         <strong>Address:</strong> Dallas Market Center, Showroom #316, 2100 N Stemmons Fwy, Dallas, TX 75207
                     </div>
-                    <div class="map-container shadow-sm" style="overflow: hidden;">
-                        <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3353.153920970631!2d-96.83151812344799!3d32.8013867832626!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864e9eacc127f8a7%3A0x6b4ef124036fa781!2s2100%20N%20Stemmons%20Fwy%2C%20Dallas%2C%20TX%2075207!5e0!3m2!1sen!2sus!4v1716752000000!5m2!1sen!2sus" 
-                            width="100%" 
-                            height="100%" 
-                            style="border:0;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                    </div>
-                </div>
-                
-                <div class="tab-pane fade" id="pills-irving" role="tabpanel" aria-labelledby="pills-irving-tab">
-                    <div class="mb-2 small text-muted">
-                        <strong>Address:</strong> 6012 Campus Cir Dr W, Ste 220, Irving, TX 75063
-                    </div>
-                    <div class="map-container shadow-sm" style="overflow: hidden;">
-                        <iframe 
-                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3350.2796443329243!2d-96.99449882344485!3d32.90390177579178!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864c2847a98eb9bf%3A0x1d154fa9202ba3f7!2s6012%20Campus%20Cir%20Dr%20W%20%23220%2C%20Irving%2C%20TX%2075063!5e0!3m2!1sen!2sus!4v1716752100000!5m2!1sen!2sus" 
-                            width="100%" 
-                            height="100%" 
-                            style="border:0;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
+                    <div class="map-container shadow-sm" style="overflow: hidden; height: 350px;">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3353.153920970631!2d-96.83151812344799!3d32.8013867832626!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864e9eacc127f8a7%3A0x6b4ef124036fa781!2s2100%20N%20Stemmons%20Fwy%2C%20Dallas%2C%20TX%2075207!5e0!3m2!1sen!2sus!4v1716752000000!5m2!1sen!2sus" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
                 </div>
             </div>
         </div>
 
+        <div class="accordion-item rounded-0 border">
+            <h2 class="accordion-header" id="headingIrving">
+                <button class="accordion-button collapsed fw-bold text-dark bg-light fs-5" type="button" data-bs-toggle="collapse" data-bs-target="#collapseIrving" aria-expanded="false" aria-controls="collapseIrving" style="box-shadow: none;">
+                    📍 Irving Showroom (Click to view)
+                </button>
+            </h2>
+            <div id="collapseIrving" class="accordion-collapse collapse" aria-labelledby="headingIrving" data-bs-parent="#showroomAccordion">
+                <div class="accordion-body bg-white">
+                    <div class="mb-2 small text-muted">
+                        <strong>Address:</strong> 6012 Campus Cir Dr W, Ste 220, Irving, TX 75063
+                    </div>
+                    <div class="map-container shadow-sm" style="overflow: hidden; height: 350px;">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3350.2796443329243!2d-96.99449882344485!3d32.90390177579178!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x864c2847a98eb9bf%3A0x1d154fa9202ba3f7!2s6012%20Campus%20Cir%20Dr%20W%20%23220%2C%20Irving%2C%20TX%2075063!5e0!3m2!1sen!2sus!4v1716752100000!5m2!1sen!2sus" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
