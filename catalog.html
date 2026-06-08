@@ -78,7 +78,7 @@ layout: null
           <div class="card-body d-flex flex-column">
               <div class="d-flex justify-content-between align-items-center mb-2">
                   <span class="badge bg-secondary">#{{ product_id }}</span>
-                  <div class="price-text">${{ item.Price }}</div>
+                  <div class="price-text">${{ item.Price | plus: 0 | format: "%.2f" }}</div>
               </div>
               
               <h6 class="card-title fw-bold mb-3" style="min-height: 40px;">{{ item.Description }}</h6>
