@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Customer Sales Lookup</title>
+<style>
+  :root{
+    --bg:#151116;
+    --bg-card:#211a24;
+    --line:#3a2f3f;
+    --ink:#f2ece8;
+    --ink-dim:#a99cae;
+    --accent:#ff7a33;
+    --accent-dim:#a8501f;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding-bottom:40px;
+  }
+
+  header{
+    position:sticky;
+    top:0;
+    z-index:10;
+    background:rgba(21,17,22,0.96);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:14px 16px 12px;
+  }
+  .title-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:10px;
+  }
+  h1{
+    font-size:15px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0;
+    font-weight:600;
+  }
+  h1 span{color:var(--accent);}
+  #count{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-dim);
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+  }
+  #customer{
+    flex:0 0 130px;
+    padding:11px 10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#1c1620;
+    color:var(--accent);
+    font-size:14px;
+    font-weight:600;
+    outline:none;
+    -webkit-appearance:none;
+    appearance:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%23a99cae"/></svg>');
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    padding-right:26px;
+  }
+  #customer:focus{border-color:var(--accent);}
+  #search{
+    flex:1;
+    min-width:0;
+    padding:11px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#1c1620;
+    color:var(--ink);
+    font-size:16px;
+    outline:none;
+  }
+  #search:focus{border-color:var(--accent);}
+  #search::placeholder{color:#6e6274;}
+
+  main{padding:14px;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+    gap:12px;
+  }
+  .card{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .thumb{
+    width:100%;
+    aspect-ratio:1/1;
+    background:#0f0c11 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="%23473b4d" stroke-width="1.5"><path d="M3 16l4-4a2 2 0 0 1 3 0l5 5"/><circle cx="9" cy="9" r="1.5"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>') center/28px no-repeat;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .thumb img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .info{padding:9px 10px 11px;}
+  .sku{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--accent);
+    font-weight:600;
+    letter-spacing:0.01em;
+  }
+  .cust{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-dim);
+    margin-top:1px;
+  }
+  .desc{
+    font-size:13px;
+    line-height:1.35;
+    margin-top:6px;
+    color:var(--ink);
+  }
+  #empty{
+    display:none;
+    text-align:center;
+    color:var(--ink-dim);
+    padding:60px 20px;
+    font-size:14px;
+  }
+
+  /* lightbox */
+  #lightbox{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(10,8,11,0.92);
+    z-index:100;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  #lightbox.open{display:flex;}
+  #lightbox img{
+    max-width:100%;
+    max-height:78vh;
+    border-radius:8px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  }
+  #lightbox-cap{
+    position:absolute;
+    bottom:28px;
+    left:0;right:0;
+    text-align:center;
+    color:var(--ink-dim);
+    font-family:var(--mono);
+    font-size:12px;
+    padding:0 20px;
+  }
+  #lightbox-cap b{color:var(--ink);font-family:inherit;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <h1>Customer <span>&middot;</span> Sales Lookup</h1>
+    <span id="count"></span>
+  </div>
+  <div class="controls">
+    <select id="customer"></select>
+    <input id="search" type="text" placeholder="Search SKU, item#, or description…" autocomplete="off">
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div id="empty">No matching items</div>
+</main>
+
+<div id="lightbox">
+  <img id="lightbox-img" src="" alt="">
+  <div id="lightbox-cap"></div>
+</div>
+
+<script>
+const dataByCustomer = {
+  "At Home": [
+    {item:"64995", cust:"124397903", desc:"23FT DRAPED SPIDER WEB"},
+    {item:"66475", cust:"125006727", desc:"21.1IN SET OF 6 TOMBSTONES"},
+    {item:"66748", cust:"125024670", desc:"5ft shaking Jack-O-lantern Sca"},
+    {item:"66969", cust:"", desc:"4FT Ghost Holding Pumpkin"},
+    {item:"62874", cust:"125006679", desc:"19.5in Animated Pumpkin Man Gr"},
+    {item:"78819", cust:"124357236", desc:"78IN SPIDER WEB"},
+    {item:"72202", cust:"124357237", desc:"7IN REALISTIC SKULL TT"},
+    {item:"63440", cust:"124357241", desc:"24 LU Black Spider"},
+    {item:"83552", cust:"124357240", desc:"6PK 4IN SKULLS"},
+    {item:"63597", cust:"124358644", desc:"2FT HANGING WITCH"},
+    {item:"85865", cust:"124358646", desc:"20.5in SMALL HANGING GHOST"},
+    {item:"45696", cust:"124358504", desc:"LIFE SIZE GROUND BREAKING SKEL"},
+    {item:"48585", cust:"125006791", desc:"7in 2PACK FIRE LOG SKULLS"},
+    {item:"48790", cust:"125006896", desc:"26IN SET OF 2 IRON FENCES"},
+    {item:"39293", cust:"124359040", desc:"20IN HANGING SKELETON"},
+    {item:"39280", cust:"124359041", desc:"36IN HALLOWEEN SKELETON"},
+    {item:"48050", cust:"124376187", desc:"17X11 Salem Brewery Metal Sign"},
+    {item:"47159", cust:"125009585", desc:"4.2in Cement Gargoyle  Fierce"},
+    {item:"47762", cust:"125038813", desc:"5.5IN Cement Crow on Skull"},
+    {item:"49285", cust:"125038826", desc:"9.8IN Resin Gargoyle Fierce"},
+    {item:"49123", cust:"125038832", desc:"17.52in Canvas - Wanted Poster"},
+    {item:"47742", cust:"125038846", desc:"5.5IN Cement Tombstone Bat"},
+    {item:"47743", cust:"125038851", desc:"6IN Cement Tombstone Black Cat"},
+    {item:"48731", cust:"125039413", desc:"36IN PLASTIC DECAYING SKELETON"},
+    {item:"48852", cust:"125010075", desc:"5ft LU Eyes Black Skeleton"},
+    {item:"49258", cust:"125038825", desc:"5FT PINK SKELETON"},
+    {item:"39289", cust:"124359650", desc:"60IN LIFESIZE POSABLE SKELETON"},
+    {item:"45598", cust:"125038803", desc:"Glow In The Dark 5FT Skeleton"},
+    {item:"49283", cust:"125010263", desc:"36IN Pink Glitter Skeleton"},
+    {item:"47727", cust:"124358503", desc:"7ft LED Hanging Witch"},
+    {item:"48666", cust:"125007888", desc:"6ft LED Hanging Ghost"},
+    {item:"48845", cust:"125010251", desc:"7ft Hanging Ghost"},
+    {item:"49255", cust:"125036942", desc:"4.5ft Swinging Ghost"}
+  ],
+  "Michaels": [
+    {item:"49247", cust:"813618", desc:"ASH TT 22.8\" IRON CAT"},
+    {item:"66443", cust:"814127", desc:"ASH TOMBSTONE 35IN HORSEMAN"},
+    {item:"64900", cust:"809494", desc:"ASH HANGING REAPER ANIMATED"},
+    {item:"67268", cust:"809596", desc:"ASH HANGING WITCH SONIC"},
+    {item:"77870", cust:"809609", desc:"ASH HANGING CREEPY RAG DOLL"},
+    {item:"67267", cust:"810188", desc:"ASH TT 5FT WITCH ANIMATED"},
+    {item:"65771", cust:"810189", desc:"ASH WALL HANGING GHOST SMILE"},
+    {item:"85865", cust:"810191", desc:"ASH WALL HANGING GHOST SHOCK"},
+    {item:"75062", cust:"810192", desc:"ASH TT SPIDER BLK"},
+    {item:"65695", cust:"810194", desc:"ASH WALL HANGING LAYERED GHOST"},
+    {item:"63749", cust:"810195", desc:"ASH FREAKY FABRIC BLK"},
+    {item:"65696", cust:"810196", desc:"ASH WALL HANGING GHOST SAD"},
+    {item:"05996", cust:"810197", desc:"ASH FREAKY FABRIC WHT"},
+    {item:"85330", cust:"810198", desc:"ASH TT STAKE GHOST"},
+    {item:"66215", cust:"809605", desc:"ASH HANGING SONIC PKN MAN"},
+    {item:"71039", cust:"809606", desc:"ASH HANGING REAPER GHOST BLK"},
+    {item:"66583", cust:"810187", desc:"ASH HANGING GIRL ANIMATE"},
+    {item:"62731", cust:"810190", desc:"ASH TT BABY HEAD SPIDER"},
+    {item:"67314", cust:"810193", desc:"ASH TT SKULL SPIDER"},
+    {item:"72942", cust:"810230", desc:"ASH WALL PLASTIC HOOK HAND"},
+    {item:"72941", cust:"810231", desc:"ASH WALL PLASTIC HOOK FOOT"},
+    {item:"67224", cust:"809613", desc:"ASH TT BIG LATEX FROG BLK"},
+    {item:"49173", cust:"814875", desc:"ASH IRON RAVEN"},
+    {item:"49206", cust:"814876", desc:"ASH CAST IRON LOCK & KEYS"},
+    {item:"49203", cust:"810234", desc:"ASH TT RESIN SKULL CHECKER"},
+    {item:"45711", cust:"810235", desc:"ASH GROUND BREAKING SKELETON"},
+    {item:"39280", cust:"810237", desc:"ASH HANGING SKELETON 35IN"},
+    {item:"66448", cust:"810236", desc:"ASH HANGING CROSSBONES"},
+    {item:"48499", cust:"815972", desc:"ASH 16IN PUMPKIN SKELE"},
+    {item:"67273", cust:"816012", desc:"ASH HANG 16IN SKELE MULTI HAIR"},
+    {item:"67272", cust:"816013", desc:"ASH HANG 16IN SKELE PUR HAIR"},
+    {item:"66412", cust:"816014", desc:"ASH HANG 16IN SKELE SLV SINGER"},
+    {item:"65351", cust:"816015", desc:"ASH HANG 16IN SKELE CONVICT"},
+    {item:"64317", cust:"816016", desc:"ASH HANG 16IN SKELE JOKER"},
+    {item:"77555", cust:"816017", desc:"ASH HANG 16IN SKELE DOTD BRIDE"},
+    {item:"74839", cust:"816018", desc:"ASH HANG 16IN SKELE DOTD GROOM"},
+    {item:"67234", cust:"816019", desc:"ASH HANG 16IN SKEL PK HAIR CWN"},
+    {item:"61297", cust:"810233", desc:"ASH BODY PART EYE BALL"},
+    {item:"66960", cust:"814141", desc:"ASH TOMBSTONE SET OF 6"},
+    {item:"67263", cust:"814125", desc:"ASH TOMBSTONE 35IN DUST"},
+    {item:"82467", cust:"810232", desc:"ASH SKULL HEAD WITH MESH BAG"},
+    {item:"66332", cust:"814119", desc:"ASH TOMBSTONE 35IN MY BELOVED"},
+    {item:"66439", cust:"814123", desc:"ASH TOMBSTONE 35IN POE"}
+  ],
+  "Walmart": [
+    {item:"64745", cust:"", desc:"5FT ANMTD HANG CLWN"},
+    {item:"64364", cust:"", desc:"20IN SHAKING GHOST"},
+    {item:"45115", cust:"", desc:"16IN FAUX SKELETON"},
+    {item:"64715", cust:"", desc:"WLCM WITCH PRCH BNR"},
+    {item:"66983", cust:"", desc:"36\" LU GHOST W/BROOM"},
+    {item:"66988", cust:"", desc:"31.5\" HANGING GHOST"},
+    {item:"67383", cust:"", desc:"6PK TOMBSTONE GOBLYN"},
+    {item:"39292", cust:"", desc:"12PC FAUX BAG BONES"},
+    {item:"49121", cust:"", desc:"35.4\" MOSS SKELETON"},
+    {item:"65764", cust:"", desc:"6PK TOMBSTONE SKULL"},
+    {item:"46074", cust:"", desc:"12IN LU SKELETON TT"},
+    {item:"65984", cust:"", desc:"35IN FAUX SKELETON"},
+    {item:"66985", cust:"", desc:"SET OF STANDING GHOST"}
+  ]
+};
+
+const customerSelect = document.getElementById('customer');
+const grid = document.getElementById('grid');
+const search = document.getElementById('search');
+const countEl = document.getElementById('count');
+const emptyEl = document.getElementById('empty');
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightbox-img');
+const lightboxCap = document.getElementById('lightbox-cap');
+
+Object.keys(dataByCustomer).forEach(name => {
+  const opt = document.createElement('option');
+  opt.value = name;
+  opt.textContent = name;
+  customerSelect.appendChild(opt);
+});
+
+function currentProducts(){
+  return dataByCustomer[customerSelect.value] || [];
+}
+
+function render(){
+  const q = search.value.trim().toLowerCase();
+  const source = currentProducts();
+  const list = !q ? source : source.filter(p =>
+    p.item.toLowerCase().includes(q) ||
+    p.cust.toLowerCase().includes(q) ||
+    p.desc.toLowerCase().includes(q)
+  );
+
+  grid.innerHTML = '';
+  list.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="thumb">
+        <img src="assets/gti_images/${p.item}.jpg" alt="${p.item}" loading="lazy"
+             onerror="this.parentElement.classList.add('noimg'); this.remove();">
+      </div>
+      <div class="info">
+        <div class="sku">#${p.item}</div>
+        <div class="cust">${p.cust ? 'Cust# ' + p.cust : 'No Cust#'}</div>
+        <div class="desc">${p.desc}</div>
+      </div>`;
+    card.querySelector('.thumb').addEventListener('click', () => openLightbox(p));
+    grid.appendChild(card);
+  });
+  countEl.textContent = list.length + ' items';
+  emptyEl.style.display = list.length ? 'none' : 'block';
+}
+
+function openLightbox(p){
+  lightboxImg.src = `assets/gti_images/${p.item}.jpg`;
+  lightboxCap.innerHTML = `<b>#${p.item}</b>&nbsp; ${p.cust ? 'Cust# '+p.cust+' &middot; ' : ''}${p.desc}`;
+  lightbox.classList.add('open');
+}
+lightbox.addEventListener('click', () => lightbox.classList.remove('open'));
+
+customerSelect.addEventListener('change', render);
+search.addEventListener('input', render);
+
+render();
+</script>
+
+</body>
+</html>
