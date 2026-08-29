@@ -102,6 +102,22 @@
     overflow:hidden;
     display:flex;
     flex-direction:column;
+    position:relative;
+  }
+  .year-badge{
+    position:absolute;
+    top:8px;
+    left:8px;
+    z-index:2;
+    background:rgba(21,17,22,0.85);
+    color:var(--accent);
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:600;
+    padding:2px 7px;
+    border-radius:6px;
+    border:1px solid var(--accent-dim);
+    letter-spacing:0.02em;
   }
   .thumb{
     width:100%;
@@ -295,6 +311,44 @@ const dataByCustomer = {
     {item:"46074", cust:"", desc:"12IN LU SKELETON TT"},
     {item:"65984", cust:"", desc:"35IN FAUX SKELETON"},
     {item:"66985", cust:"", desc:"SET OF STANDING GHOST"}
+  ],
+  "Spirit": [
+    {year:"2026", item:"85276", cust:"01115989", desc:"GT 15IN SKULL BONES TOMBSTONE"},
+    {year:"2026", item:"66512", cust:"01830322", desc:"GT 36IN GARDEN WOMAN TOMBSTONE"},
+    {year:"2026", item:"61665", cust:"01494533", desc:"GT 66IN CLOWN"},
+    {year:"2026", item:"65872", cust:"01732791", desc:"GT WINDOW COVER- HANDS"},
+    {year:"2026", item:"65870", cust:"01732809", desc:"GT WINDOW COVER-WOMAN"},
+    {year:"2026", item:"39287", cust:"01103860", desc:"GT 5FT HANGING SKELETON"},
+    {year:"2026", item:"39280", cust:"01145713", desc:"GT 36IN PLASTIC SKELETON"},
+    {year:"2026", item:"48808", cust:"01839935", desc:"GT 36IN PINK SKELETON"},
+    {year:"2026", item:"73640", cust:"01325554", desc:"GT 13IN NEON SKELETON"},
+    {year:"2026", item:"67294", cust:"05068143", desc:"GT 13IN PASTEL PK SKELETON"},
+    {year:"2025", item:"85276", cust:"01115989", desc:"GT 15IN SKULL BONES TOMBSTONE"},
+    {year:"2025", item:"70927", cust:"01276492", desc:"GT 3FT HANG TATTERED GIRL"},
+    {year:"2025", item:"61665", cust:"01494533", desc:"GT 66IN CLOWN"},
+    {year:"2025", item:"66512", cust:"01830322", desc:"GT 36IN GARDEN WOMAN TOMBSTONE"},
+    {year:"2025", item:"65853", cust:"01713387", desc:"GT 4 PACK HUMOR TOMBSTONES"},
+    {year:"2025", item:"65803", cust:"01713395", desc:"GT 4 PACK SKULL TOMBSTONES"},
+    {year:"2025", item:"80890", cust:"01145846", desc:"GT SKULL GARLAND"},
+    {year:"2025", item:"85694", cust:"01103878", desc:"GT VINYL SKULL"},
+    {year:"2025", item:"65278", cust:"01691575", desc:"GT ANGEL SKELETON"},
+    {year:"2025", item:"05998", cust:"0190413", desc:"GT FREAKY FABRIC GREEN"},
+    {year:"2025", item:"63581", cust:"01564285", desc:"GT FREAKY FABRIC ORANGE"},
+    {year:"2025", item:"63580", cust:"01564293", desc:"GT FREAKY FABRIC PURPLE"},
+    {year:"2025", item:"05996", cust:"01730373", desc:"GT FREAKY FABRIC CREAM"},
+    {year:"2025", item:"65872", cust:"01732791", desc:"GT WINDOW COVER- HANDS"},
+    {year:"2025", item:"65870", cust:"01732809", desc:"GT WINDOW COVER-WOMAN"},
+    {year:"2025", item:"63749", cust:"059352", desc:"GT FREAKY FABRIC BLACK"},
+    {year:"2025", item:"39292", cust:"01185453", desc:"GT BAG OF BONES 12 PACK"},
+    {year:"2025", item:"48316", cust:"01691419", desc:"GT DECAYING BAG OF BONES"},
+    {year:"2025", item:"39287", cust:"01103860", desc:"GT 5FT HANGING SKELETON"},
+    {year:"2025", item:"39280", cust:"01145713", desc:"GT 36IN PLASTIC SKELETON"},
+    {year:"2025", item:"48808", cust:"01839935", desc:"GT 36IN PINK SKELETON"},
+    {year:"2025", item:"39293", cust:"01145838", desc:"GT 20INCH PLASTIC SKELETON"},
+    {year:"2025", item:"45133", cust:"01344241", desc:"GT 20IN 2 HEADED SKELETON"},
+    {year:"2025", item:"73640", cust:"01325554", desc:"GT 13IN NEON SKELETON"},
+    {year:"2025", item:"66463", cust:"01848951", desc:"GT 2PK MAGNETIC COCKROACH"},
+    {year:"2025", item:"45726", cust:"01316066", desc:"GT 5 FT LARGE BLACK SPIDER"}
   ]
 };
 
@@ -324,7 +378,8 @@ function render(){
   const list = !q ? source : source.filter(p =>
     p.item.toLowerCase().includes(q) ||
     p.cust.toLowerCase().includes(q) ||
-    p.desc.toLowerCase().includes(q)
+    p.desc.toLowerCase().includes(q) ||
+    (p.year || '').toLowerCase().includes(q)
   );
 
   grid.innerHTML = '';
@@ -332,6 +387,7 @@ function render(){
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
+      ${p.year ? `<div class="year-badge">${p.year}</div>` : ''}
       <div class="thumb">
         <img src="assets/gti_images/${p.item}.jpg" alt="${p.item}" loading="lazy"
              onerror="this.parentElement.classList.add('noimg'); this.remove();">
@@ -350,7 +406,7 @@ function render(){
 
 function openLightbox(p){
   lightboxImg.src = `assets/gti_images/${p.item}.jpg`;
-  lightboxCap.innerHTML = `<b>#${p.item}</b>&nbsp; ${p.cust ? 'Cust# '+p.cust+' &middot; ' : ''}${p.desc}`;
+  lightboxCap.innerHTML = `<b>#${p.item}</b>&nbsp; ${p.year ? p.year+' &middot; ' : ''}${p.cust ? 'Cust# '+p.cust+' &middot; ' : ''}${p.desc}`;
   lightbox.classList.add('open');
 }
 lightbox.addEventListener('click', () => lightbox.classList.remove('open'));
