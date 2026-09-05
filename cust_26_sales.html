@@ -298,19 +298,19 @@ const dataByCustomer = {
     {item:"66439", cust:"814123", desc:"ASH TOMBSTONE 35IN POE"}
   ],
   "Walmart": [
-    {item:"64745", cust:"", desc:"5FT ANMTD HANG CLWN"},
-    {item:"64364", cust:"", desc:"20IN SHAKING GHOST"},
-    {item:"45115", cust:"", desc:"16IN FAUX SKELETON"},
-    {item:"64715", cust:"", desc:"WLCM WITCH PRCH BNR"},
-    {item:"66983", cust:"", desc:"36\" LU GHOST W/BROOM"},
-    {item:"66988", cust:"", desc:"31.5\" HANGING GHOST"},
-    {item:"67383", cust:"", desc:"6PK TOMBSTONE GOBLYN"},
-    {item:"39292", cust:"", desc:"12PC FAUX BAG BONES"},
-    {item:"49121", cust:"", desc:"35.4\" MOSS SKELETON"},
-    {item:"65764", cust:"", desc:"6PK TOMBSTONE SKULL"},
-    {item:"46074", cust:"", desc:"12IN LU SKELETON TT"},
-    {item:"65984", cust:"", desc:"35IN FAUX SKELETON"},
-    {item:"66985", cust:"", desc:"SET OF STANDING GHOST"}
+    {item:"64745", cust:"684615364", desc:"5FT ANMTD HANG CLWN"},
+    {item:"64364", cust:"684615366", desc:"20IN SHAKING GHOST"},
+    {item:"45115", cust:"684615358", desc:"16IN FAUX SKELETON"},
+    {item:"64715", cust:"684615362", desc:"WLCM WITCH PRCH BNR"},
+    {item:"66983", cust:"684615356", desc:"36\" LU GHOST W/BROOM"},
+    {item:"66988", cust:"684615368", desc:"31.5\" HANGING GHOST"},
+    {item:"67383", cust:"684615360", desc:"6PK TOMBSTONE GOBLYN"},
+    {item:"39292", cust:"684615363", desc:"12PC FAUX BAG BONES"},
+    {item:"49121", cust:"684615365", desc:"35.4\" MOSS SKELETON"},
+    {item:"65764", cust:"684615357", desc:"6PK TOMBSTONE SKULL"},
+    {item:"46074", cust:"684615359", desc:"12IN LU SKELETON TT"},
+    {item:"65984", cust:"684615361", desc:"35IN FAUX SKELETON"},
+    {item:"66985", cust:"684615367", desc:"SET OF STANDING GHOST"}
   ],
   "Spirit": [
     {year:"2026", item:"85276", cust:"01115989", desc:"GT 15IN SKULL BONES TOMBSTONE"},
@@ -361,18 +361,32 @@ const lightbox = document.getElementById('lightbox');
 const lightboxImg = document.getElementById('lightbox-img');
 const lightboxCap = document.getElementById('lightbox-cap');
 
+const placeholderOpt = document.createElement('option');
+placeholderOpt.value = '';
+placeholderOpt.textContent = 'Select customer…';
+customerSelect.appendChild(placeholderOpt);
+
 Object.keys(dataByCustomer).forEach(name => {
   const opt = document.createElement('option');
   opt.value = name;
   opt.textContent = name;
   customerSelect.appendChild(opt);
 });
+customerSelect.value = '';
 
 function currentProducts(){
   return dataByCustomer[customerSelect.value] || [];
 }
 
 function render(){
+  if (!customerSelect.value){
+    grid.innerHTML = '';
+    countEl.textContent = '';
+    emptyEl.textContent = 'Please select a customer';
+    emptyEl.style.display = 'block';
+    return;
+  }
+
   const q = search.value.trim().toLowerCase();
   const source = currentProducts();
   const list = !q ? source : source.filter(p =>
@@ -382,6 +396,7 @@ function render(){
     (p.year || '').toLowerCase().includes(q)
   );
 
+  emptyEl.textContent = 'No matching items';
   grid.innerHTML = '';
   list.forEach(p => {
     const card = document.createElement('div');
