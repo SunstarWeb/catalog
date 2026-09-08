@@ -924,11 +924,15 @@ function render(){
 
   const q = search.value.trim().toLowerCase();
   const source = currentProducts();
-  const list = !q ? source : source.filter(p =>
+  const filtered = !q ? source : source.filter(p =>
     p.item.toLowerCase().includes(q) ||
     p.vendor.toLowerCase().includes(q) ||
     p.desc.toLowerCase().includes(q)
   );
+  const list = filtered.slice().sort((a, b) => {
+    if (a.repeat !== b.repeat) return a.repeat ? -1 : 1;
+    return parseFloat(a.cost) - parseFloat(b.cost);
+  });
 
   emptyEl.textContent = 'No matching items';
   grid.innerHTML = '';
