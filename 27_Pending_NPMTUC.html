@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Customer Sales Lookup</title>
+<style>
+  :root{
+    --bg:#151116;
+    --bg-card:#211a24;
+    --line:#3a2f3f;
+    --ink:#f2ece8;
+    --ink-dim:#a99cae;
+    --accent:#ff7a33;
+    --accent-dim:#a8501f;
+    --new:#3fb950;
+    --new-dim:#1f6e2e;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding-bottom:40px;
+  }
+
+  header{
+    position:sticky;
+    top:0;
+    z-index:10;
+    background:rgba(21,17,22,0.96);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:14px 16px 12px;
+  }
+  .title-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:10px;
+  }
+  h1{
+    font-size:15px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-dim);
+    margin:0;
+    font-weight:600;
+  }
+  h1 span{color:var(--accent);}
+  #count{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-dim);
+  }
+  .pending-banner{
+    text-align:center;
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+    border:1px solid var(--accent-dim);
+    background:rgba(255,122,51,0.08);
+    border-radius:8px;
+    padding:6px 10px;
+    margin-bottom:10px;
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+  }
+  #customer{
+    flex:0 0 150px;
+    padding:11px 10px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#1c1620;
+    color:var(--accent);
+    font-size:14px;
+    font-weight:600;
+    outline:none;
+    -webkit-appearance:none;
+    appearance:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%23a99cae"/></svg>');
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    padding-right:26px;
+  }
+  #customer:focus{border-color:var(--accent);}
+  #search{
+    flex:1;
+    min-width:0;
+    padding:11px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#1c1620;
+    color:var(--ink);
+    font-size:16px;
+    outline:none;
+  }
+  #search:focus{border-color:var(--accent);}
+  #search::placeholder{color:#6e6274;}
+
+  main{padding:14px;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:12px;
+  }
+  .card{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+  .status-badge{
+    position:absolute;
+    top:8px;
+    left:8px;
+    z-index:2;
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:700;
+    padding:2px 7px;
+    border-radius:6px;
+    letter-spacing:0.03em;
+    background:rgba(21,17,22,0.85);
+  }
+  .status-badge.repeat{
+    color:var(--accent);
+    border:1px solid var(--accent-dim);
+  }
+  .status-badge.new{
+    color:var(--new);
+    border:1px solid var(--new-dim);
+  }
+  .thumb{
+    width:100%;
+    aspect-ratio:1/1;
+    background:#0f0c11 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="%23473b4d" stroke-width="1.5"><path d="M3 16l4-4a2 2 0 0 1 3 0l5 5"/><circle cx="9" cy="9" r="1.5"/><rect x="2" y="3" width="20" height="18" rx="2"/></svg>') center/28px no-repeat;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .thumb img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .info{padding:9px 10px 11px;}
+  .sku{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--accent);
+    font-weight:600;
+    letter-spacing:0.01em;
+  }
+  .vendor{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-dim);
+    margin-top:1px;
+    word-break:break-all;
+  }
+  .desc{
+    font-size:13px;
+    line-height:1.35;
+    margin-top:6px;
+    color:var(--ink);
+  }
+  .cost{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-dim);
+    margin-top:6px;
+  }
+  .cost b{color:var(--ink);font-family:inherit;}
+  #empty{
+    display:none;
+    text-align:center;
+    color:var(--ink-dim);
+    padding:60px 20px;
+    font-size:14px;
+  }
+
+  /* lightbox */
+  #lightbox{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(10,8,11,0.92);
+    z-index:100;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  #lightbox.open{display:flex;}
+  #lightbox img{
+    max-width:100%;
+    max-height:78vh;
+    border-radius:8px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  }
+  #lightbox-cap{
+    position:absolute;
+    bottom:28px;
+    left:0;right:0;
+    text-align:center;
+    color:var(--ink-dim);
+    font-family:var(--mono);
+    font-size:12px;
+    padding:0 20px;
+  }
+  #lightbox-cap b{color:var(--ink);font-family:inherit;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <h1>Customer <span>&middot;</span> Sales Lookup</h1>
+    <span id="count"></span>
+  </div>
+  <div class="pending-banner">27 Pending Items</div>
+  <div class="controls">
+    <select id="customer"></select>
+    <input id="search" type="text" placeholder="Search SKU, vendor item#, or description…" autocomplete="off">
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+  <div id="empty">No matching items</div>
+</main>
+
+<div id="lightbox">
+  <img id="lightbox-img" src="" alt="">
+  <div id="lightbox-cap"></div>
+</div>
+
+<script>
+const dataByCustomer = {
+  "Ace Hardware": [
+    {item:"63853", vendor:"CY22075", desc:"Bag of Skulls  (6 PK)", cost:"2.20", repeat:false},
+    {item:"90036", vendor:"XWH4699-K/XWH4153", desc:"6PK TOMBSTONE A/2 (26 AceHdwr)", cost:"4.75", repeat:false},
+    {item:"90039", vendor:"KH2024YF04/KH2024YF18", desc:"Door Curtain A/2", cost:"2.75", repeat:false},
+    {item:"90040", vendor:"HJD11022/HJD11023-AD011T", desc:"48\" LU REAPER A/2", cost:"4.50", repeat:false},
+    {item:"95761", vendor:"FL19106-1/FL23233F-AB", desc:"Hlwn Vertical Banners A2 (26 Alb)", cost:"3.73", repeat:false},
+    {item:"90029", vendor:"KH2024YF102/KH2024YF104", desc:"193\" Halloween Door Curtain A2 (27 Alb)", cost:"11.90", repeat:false},
+    {item:"95456", vendor:"KH2020YF10/KH2020YF04", desc:"Fake Window Decor A2 (PFA 21)", cost:"1.98", repeat:false},
+    {item:"95663", vendor:"HC18-22083/HC18-23037AK", desc:"27.5\" Creepy Doll A2 (24 SUN)", cost:"1.70", repeat:false},
+    {item:"95463", vendor:"HC18-20074/HC18-20075/HC18-20084", desc:"Hanging Scarecrow Pumpkin A3", cost:"1.72", repeat:false},
+    {item:"95074", vendor:"HC18-18051-166/HC18-18051B-166/HC18-19168", desc:"21in Faceless Reaper A3", cost:"1.60", repeat:false},
+    {item:"82327", vendor:"HR90-42PGEX", desc:"Small Faceless Spectre in Chains", cost:"7.05", repeat:false},
+    {item:"65970", vendor:"FL24061Q-WS802R", desc:"3FT LU Hanging Doll Black", cost:"5.85", repeat:false},
+    {item:"94857", vendor:"HJD18048W-AD292R/HJD18009B-AD292P", desc:"39\" LU Haunted Doll A2", cost:"4.45", repeat:false},
+    {item:"94443", vendor:"HC18-13034-1/HC18-13034-2/HC18-16073", desc:"18\" Hanging Ghost A3", cost:"1.15", repeat:false},
+    {item:"75392", vendor:"HC18-16071", desc:"32\" Hanging Ghost", cost:"2.20", repeat:false},
+    {item:"67597", vendor:"HC6-24025-ZJ501C", desc:"47\" LU Fire Clown", cost:"6.95", repeat:false},
+    {item:"95837", vendor:"ARW22-83/ARW22-11/ARW21-25/ARW23-27/ARW08-37X-400W/ARW24K-41", desc:"16\" Dressed Skeleton A6", cost:"1.45", repeat:false},
+    {item:"95690", vendor:"HC18-18083Z/HC18-18083/HC18-18083L", desc:"28\" Witch Ghost A3 (25 AL)", cost:"1.55", repeat:false}
+  ],
+  "Albertsons (ICI)": [
+    {item:"95687", vendor:"CY2846J/CY2845J", desc:"Hanging Head A2", cost:"2.85", repeat:true},
+    {item:"95690", vendor:"HC18-18083Z/HC18-18083/HC18-18083L", desc:"28in Witch Ghost A3", cost:"1.29", repeat:true},
+    {item:"85550", vendor:"HJD11023-AD011T", desc:"Hanging LU Black Reaper", cost:"4.40", repeat:true},
+    {item:"64107", vendor:"HFL064", desc:"SKELETON GROUDBREAKER", cost:"2.15", repeat:true},
+    {item:"65315", vendor:"ZSR2022-347K-AD016J", desc:"Animated Pumpkin Man", cost:"6.85", repeat:true},
+    {item:"66097", vendor:"CY2833J-ZJ505GN", desc:"Creepy Burlap Doll Red Hair", cost:"6.02", repeat:true},
+    {item:"71289", vendor:"HFJ007", desc:"35in Realistic Skeleton", cost:"3.50", repeat:false},
+    {item:"82366", vendor:"ZSG15", desc:"4in Plastic Skull", cost:"0.50", repeat:false},
+    {item:"80012", vendor:"ARW07-99", desc:"LIFESIZE GRDBRKNG SKELETON", cost:"4.35", repeat:false},
+    {item:"79107", vendor:"XHY18066B", desc:"24ft Gigantic Rope Web - White", cost:"4.23", repeat:false},
+    {item:"75064", vendor:"LL16028WB", desc:"Hairy Oversized Spider", cost:"4.30", repeat:false},
+    {item:"67296", vendor:"XWH4720F", desc:"6PK Tombstone Set", cost:"5.30", repeat:false},
+    {item:"90029", vendor:"KH2024YF102/KH2024YF104", desc:"Halloween Door Curtain A2", cost:"11.70", repeat:false},
+    {item:"90030", vendor:"HY4-1/HY4-2", desc:"Bloody Arm & Foot A2", cost:"2.20", repeat:false},
+    {item:"66164", vendor:"HC18-24027", desc:"Hanging Creepy Bride", cost:"1.40", repeat:false},
+    {item:"95706", vendor:"HC18-24026/HC18-24007PFA", desc:"20\" Creepy Bride and Nun A2", cost:"1.65", repeat:false},
+    {item:"66368", vendor:"HR130-18", desc:"51in Hanging Bloody Eye Doll", cost:"4.20", repeat:false},
+    {item:"85549", vendor:"HJD11022", desc:"Hanging LU White Reaper", cost:"4.40", repeat:false},
+    {item:"90033", vendor:"ARW22-31/ARW21-25/ARW24K-41/ARW08-37X-400W/ARW17-100/ARW17-101", desc:"16\" Dressed Skeleton A6", cost:"1.33", repeat:false},
+    {item:"67383", vendor:"XWH5176-F", desc:"6PK Tombstone Set", cost:"5.30", repeat:false},
+    {item:"66914", vendor:"XWH4699-K", desc:"21\" Tombstone Set of 6", cost:"5.30", repeat:false}
+  ],
+  "At Home": [
+    {item:"67399", vendor:"ARW26-68", desc:"15.7\" Hanging Skeleton", cost:"1.25", repeat:false},
+    {item:"67400", vendor:"ARW26-114", desc:"15.7\" Hanging Suited Skeleton", cost:"1.07", repeat:false},
+    {item:"67401", vendor:"CG25172", desc:"15\" Realistic Raven Wreath w/Skulls", cost:"4.15", repeat:false},
+    {item:"67402", vendor:"ARW14-61ZG", desc:"18.5\" Skeleton Pearl White Nakelace", cost:"1.08", repeat:false},
+    {item:"67403", vendor:"ARW15-60ZG", desc:"18.5\" Skeleton Pearl White Nakelace", cost:"1.13", repeat:false},
+    {item:"67434", vendor:"ARW15-61ZG", desc:"18.5\" Skeleton Pearl White Nakelace", cost:"1.13", repeat:false},
+    {item:"62068", vendor:"CG21055", desc:"15\" Teeth Necklace Costume Accessory", cost:"1.75", repeat:false},
+    {item:"67435", vendor:"CG22173", desc:"29.9\" Crow Head Necklace", cost:"1.75", repeat:false},
+    {item:"67436", vendor:"CG26006", desc:"24.8\" Hanging Skull Wreath with Chains", cost:"4.92", repeat:false},
+    {item:"67444", vendor:"FL25155Q", desc:"24.8\" Hanging And Sitting Doll", cost:"3.98", repeat:false},
+    {item:"67445", vendor:"FL25164Q", desc:"21.7\" Hanging Doll", cost:"2.50", repeat:false},
+    {item:"67354", vendor:"FL25165Q", desc:"36.6\" Hanging Doll", cost:"3.50", repeat:false},
+    {item:"67330", vendor:"FL25207S", desc:"29.5\" Hanging Pumpkin Doll", cost:"3.40", repeat:false},
+    {item:"67446", vendor:"FL25208S", desc:"23.6\" Hanging Doll", cost:"3.30", repeat:false},
+    {item:"67167", vendor:"HC18-25055-ZJ73-AA", desc:"10.2\" Tabeltop Lightup Body Ghost", cost:"2.32", repeat:false},
+    {item:"67477", vendor:"WY2626J-ZJ406B", desc:"11\" Animated Cauldron On Book", cost:"8.80", repeat:false},
+    {item:"67483", vendor:"HJB26013-WS609", desc:"15.7\" Table Top-sonic Gromm", cost:"5.35", repeat:false},
+    {item:"67352", vendor:"HR90-225J-ZJ406B", desc:"15.7\" Table Top - the Witch Pouring the Potion", cost:"8.25", repeat:false},
+    {item:"67603", vendor:"LL4-5507-AD229LGR", desc:"7.87in Magic Light Orb - Green", cost:"4.65", repeat:false},
+    {item:"67575", vendor:"LL4-02041-AD015T-210", desc:"19.5in Animated Groundbreaker Dark Pumpkin Man", cost:"12.00", repeat:false},
+    {item:"67576", vendor:"LL4-02042-AD015T-210", desc:"19.5in Animated Groundbreaker Skull Man", cost:"12.00", repeat:false},
+    {item:"67159", vendor:"HC18-25037Q", desc:"19.7\" Hanging Ghost w/County Hat", cost:"1.75", repeat:false},
+    {item:"67408", vendor:"HC18-25093-CF25W", desc:"35.4in Hanging LU Ghost - White", cost:"4.12", repeat:false},
+    {item:"67250", vendor:"HJZ26025-Q-WS813", desc:"62.99\" Standing Sonic Reaper", cost:"17.75", repeat:false},
+    {item:"67579", vendor:"LL5-50075QDZ-Z71M", desc:"65.7\" Standing Animated Scarecrow", cost:"23.97", repeat:false},
+    {item:"67657", vendor:"HC12-26006QDZ-Z71M", desc:"6ft Old Creepy Scarecrow", cost:"26.56", repeat:false},
+    {item:"66047", vendor:"KH2024YF09", desc:"47.2\" Window Curtain", cost:"1.56", repeat:false},
+    {item:"67466", vendor:"KH2024YF78", desc:"78.7\" Door Curtain", cost:"2.50", repeat:false},
+    {item:"67453", vendor:"HJQQ26009-AD016T", desc:"47.2\" Animated Swinging Scarecrow", cost:"9.46", repeat:false},
+    {item:"67355", vendor:"HS2523-1-WS868M-1", desc:"72\" Hanging Sonic Pumpkin Man", cost:"3.95", repeat:false},
+    {item:"67356", vendor:"HC9-25001-JH001", desc:"37.4\" Animated Walking Broom With Sound", cost:"7.20", repeat:false},
+    {item:"67336", vendor:"HC9-25005-JH001", desc:"25.2in Animated Broom", cost:"5.55", repeat:false},
+    {item:"67404", vendor:"HC12-25081Q-AD148D", desc:"47.2in Standing Animated Ghost Lead Dog", cost:"15.90", repeat:false},
+    {item:"67658", vendor:"HC18-26005-ZJ501M", desc:"51\" Hanging Shaking Pumpkin Man", cost:"9.98", repeat:false},
+    {item:"67660", vendor:"HC12-26005-AD148X", desc:"35.4IN STANDING ANIMATED GHOST", cost:"9.50", repeat:false},
+    {item:"67662", vendor:"XWH5217-F-21IN", desc:"21in Tombstone - Happy Halloween", cost:"1.40", repeat:false},
+    {item:"67663", vendor:"XWH5218-F-24IN", desc:"24in Tombstone Angel Skeleton", cost:"1.55", repeat:false},
+    {item:"67664", vendor:"XWH5219-F-27IN-W729Y", desc:"27in Tombstone", cost:"2.13", repeat:false},
+    {item:"67665", vendor:"XWH5220-F-27IN-W729Y", desc:"27in Tombstone", cost:"2.13", repeat:false},
+    {item:"67666", vendor:"XWH5043", desc:"Set of 6 Tombstones - 21in x 3pcs， 14in x 3pcs", cost:"4.55", repeat:false},
+    {item:"67797", vendor:"XWH5244-S", desc:"37\" Forest Wolf", cost:"8.66", repeat:false},
+    {item:"63597", vendor:"HC6-21025", desc:"2FT HANGING WITCH", cost:"1.10", repeat:true},
+    {item:"85865", vendor:"HC18-682", desc:"20.5in SMALL HANGING GHOST", cost:"1.07", repeat:true},
+    {item:"64995", vendor:"XHY2301Y", desc:"23FT DRAPED SPIDER WEB", cost:"3.32", repeat:true},
+    {item:"66475", vendor:"XWH4839-K", desc:"21.1IN SET OF 6 TOMBSTONES", cost:"4.62", repeat:true},
+    {item:"66748", vendor:"HJQQ22003-ZJ501M-166GR", desc:"5ft shaking Jack-O-lantern Sca", cost:"11.32", repeat:true},
+    {item:"66969", vendor:"HC18-25143-ZJ73AA", desc:"4FT Ghost Holding Pumpkin", cost:"5.30", repeat:true},
+    {item:"62874", vendor:"LL4-0204-AD015T-210", desc:"19.5in Animated Pumpkin Man Gr", cost:"11.90", repeat:true},
+    {item:"78819", vendor:"FL18260", desc:"78IN SPIDER WEB", cost:"0.72", repeat:true},
+    {item:"72202", vendor:"HY3-50", desc:"7IN REALISTIC SKULL TT", cost:"1.24", repeat:true},
+    {item:"63440", vendor:"FL21176-AD011G", desc:"24 LU Black Spider", cost:"2.71", repeat:true},
+    {item:"83552", vendor:"ARW13-71", desc:"6PK 4IN SKULLS", cost:"2.15", repeat:true}
+  ],
+  "Cinmar": [
+    {item:"75598", vendor:"LYT-27H", desc:"Twig Broomstick 40in", cost:"4.70", repeat:true},
+    {item:"79152", vendor:"CD1810-05", desc:"Grapevine Spiders S/3", cost:"11.20", repeat:true},
+    {item:"65792", vendor:"HC15-11015CI+16CI+17CI", desc:"Witch Rat Pack s/3", cost:"11.00", repeat:true},
+    {item:"75064", vendor:"LL16028WB", desc:"Hairy Oversized Spider", cost:"5.50", repeat:true},
+    {item:"87325", vendor:"F23-3 X 2 + B18-1CG", desc:"Bats With Flashing Eyes Set/3", cost:"13.20", repeat:true},
+    {item:"60624", vendor:"LL4-92073-AD050", desc:"Animated Groundbreaker Skeleton - Barry", cost:"14.40", repeat:true},
+    {item:"60623", vendor:"LL4-9210-AD050", desc:"Animated Groundbreaker Skeleton - Harry", cost:"14.40", repeat:true},
+    {item:"09573", vendor:"TPS1600-3J", desc:"Lifesize Wrapped Mummy", cost:"34.45", repeat:true}
+  ],
+  "CVS": [
+    {item:"75395", vendor:"HC18-16073", desc:"18in Hanging Ghost-Moaning", cost:"1.05", repeat:false},
+    {item:"78947", vendor:"HC18-18083Z", desc:"28in Witch Hat Ghost - Purple", cost:"1.60", repeat:false}
+  ],
+  "Dollar General": [
+    {item:"75395", vendor:"HC18-16073", desc:"18in Hanging Ghost-Moaning", cost:"1.05", repeat:false},
+    {item:"78948", vendor:"HC18-18083", desc:"28in Witch Hat Ghost - White", cost:"1.60", repeat:false},
+    {item:"87762", vendor:"HC18-13034", desc:"18\" Hanging Ghost - Creepy", cost:"0.95", repeat:false},
+    {item:"87763", vendor:"HC18-13034-1", desc:"18in Hanging Ghost-Boo", cost:"0.95", repeat:false},
+    {item:"87764", vendor:"HC18-13034-2", desc:"18in Hanging Ghost-Meany", cost:"0.95", repeat:false}
+  ],
+  "Meijer": [
+    {item:"66407", vendor:"LL5-40044DZ-ZJ71", desc:"HWN 68IN STANDING SONIC SCARECROW", cost:"16.68", repeat:true},
+    {item:"94271", vendor:"ARW17-101/ARW17-100", desc:"HWN DAY OF DEAD SKELETON 16IN 2 AST", cost:"1.42", repeat:true},
+    {item:"94819", vendor:"TPY10-1MJ/TPY10-4MJ/TPY10-9MJ", desc:"HWN FREAKY FABRIC 60IN 3 AST", cost:"0.77", repeat:true},
+    {item:"95659", vendor:"ARW24Q-10/ARW24Q-5", desc:"HWN SKELETON GROOM/BRIDE 16IN 2 AST", cost:"1.65", repeat:true},
+    {item:"95722", vendor:"ARW25-80/ARW25-114", desc:"HWN HANGING SKELETON 16IN 2AST", cost:"1.58", repeat:true},
+    {item:"95770", vendor:"CY2776/CY2778", desc:"HWN FAUX BODY PARTS 2 AST", cost:"3.75", repeat:true},
+    {item:"95773", vendor:"HC18-18083Z/HC18-18083/HC18-18083G/HC18-18083L", desc:"HWN 28IN HNG GHOST WITH WITCH HAT 4 AST", cost:"1.75", repeat:true},
+    {item:"95824", vendor:"ARW26S-73/ARW24K-91", desc:"HWN 15.7IN DRESSED WITCH 2 AST", cost:"1.58", repeat:true},
+    {item:"63093", vendor:"ARW22-83", desc:"16\" Skeleton Groom", cost:"1.65", repeat:false},
+    {item:"63186", vendor:"ARW22-11", desc:"16\" Hanging Skeleton Bride", cost:"1.65", repeat:false},
+    {item:"64317", vendor:"ARW23-139", desc:"ASH HANG 16IN SKELE JOKER", cost:"1.65", repeat:false},
+    {item:"79216", vendor:"HJXD19031K", desc:"20in Hanging Witch", cost:"1.78", repeat:false},
+    {item:"62482", vendor:"HC18-20084", desc:"25in Hanging Pumpkin Witch-Blk", cost:"1.88", repeat:false},
+    {item:"64445", vendor:"HC18-22083", desc:"27.6\" Hanging Girl", cost:"1.78", repeat:false},
+    {item:"72372", vendor:"HJXD16004B", desc:"30in Posable Reaper - Black", cost:"1.68", repeat:false},
+    {item:"72373", vendor:"HJXD16004W", desc:"30in Posable Reaper - White", cost:"1.68", repeat:false}
+  ],
+  "Menards": [
+    {item:"67601", vendor:"LL5-50073QDZ-SZ62M-Z36S", desc:"67\" Animated Soul Seeker", cost:"29.95", repeat:false},
+    {item:"67599", vendor:"LL5-50551QDZ-ZJ430X", desc:"69\" Animated Stretch Clown", cost:"28.10", repeat:false},
+    {item:"66703", vendor:"HJD25069-WS850", desc:"8.4FT Hanging Sonic Clown", cost:"19.87", repeat:false},
+    {item:"67604", vendor:"BF2660DDZ-DR22-Q", desc:"98.4\" Animated Standing Flying Reaper", cost:"53.84", repeat:false}
+  ],
+  "Michaels": [
+    {item:"65832", vendor:"WY2493J-ZJ406B", desc:"11\" Tabletop Animated Witch Hat on Books", cost:"7.55", repeat:false},
+    {item:"67340", vendor:"WY2656J-ZJ406B", desc:"8.7\" Animated Crystal Ball On Magic Book", cost:"9.15", repeat:false},
+    {item:"67327", vendor:"CY3056J-S-AD229CF", desc:"ASH Lightup Sonic Bloody Eyeball Small", cost:"7.82", repeat:false},
+    {item:"67436", vendor:"CG26006", desc:"24in Hanging Skull Wreath with Chains", cost:"4.92", repeat:false},
+    {item:"64738", vendor:"HC12-22073", desc:"Creepy Fabric Purple", cost:"1.87", repeat:false},
+    {item:"65296", vendor:"FL23121Q", desc:"Halloween Burlap Decor", cost:"2.54", repeat:false},
+    {item:"64737", vendor:"HC12-22071", desc:"ASH Creepy Cloth Orange", cost:"1.87", repeat:false},
+    {item:"67437", vendor:"CY3045J-AD229HM", desc:"31in Light Up Hanging Pumpkin", cost:"5.65", repeat:false},
+    {item:"63206", vendor:"ARW22-34", desc:"16\" Hanging Skeleton Clown", cost:"1.44", repeat:false},
+    {item:"63207", vendor:"ARW22-35", desc:"16\" Hanging Skeleton Clown Yellow Hair", cost:"1.44", repeat:false},
+    {item:"63208", vendor:"ARW22-36", desc:"16\" Hanging Skeleton Clown", cost:"1.44", repeat:false},
+    {item:"63627", vendor:"ARW21-25", desc:"16inSkelClown-ChiChi", cost:"1.44", repeat:false},
+    {item:"63186", vendor:"ARW22-11", desc:"16\" Hanging Skeleton Bride", cost:"1.44", repeat:false},
+    {item:"63093", vendor:"ARW22-83", desc:"16\" Skeleton Groom", cost:"1.48", repeat:false},
+    {item:"67054", vendor:"ARW26S-76", desc:"16in  Hanging Suited Skeleton", cost:"1.48", repeat:false},
+    {item:"67021", vendor:"ARW26Q-28", desc:"16in  Hanging Dressed Skeleton - Blue", cost:"1.48", repeat:false},
+    {item:"67012", vendor:"ARW26J-7", desc:"16in Hanging Suited Skeleton", cost:"1.48", repeat:false},
+    {item:"67369", vendor:"ARW23-27", desc:"16in Dressed Skeleton Punk", cost:"1.44", repeat:false},
+    {item:"73320", vendor:"ARW08-37X", desc:"16\" Skeleton Pirate", cost:"1.35", repeat:false},
+    {item:"67051", vendor:"ARW26S-73", desc:"16in Hanging Dressed Skeleton - Black Witch", cost:"1.48", repeat:false},
+    {item:"63817", vendor:"ARW23-61", desc:"16\" Skeleton Wolf", cost:"1.65", repeat:false},
+    {item:"67053", vendor:"ARW26S-75", desc:"16in Hanging Suited Skeleton - Vampire", cost:"1.25", repeat:false},
+    {item:"63793", vendor:"ARW23-39", desc:"16\" Dressed Skeleton Red Hair Lady in Blue", cost:"1.44", repeat:false},
+    {item:"65440", vendor:"ARW24K-38", desc:"16in Dressed Skeleton Clown - Green Hat", cost:"1.52", repeat:false},
+    {item:"72372", vendor:"HJXD16004B", desc:"30in Posable Reaper - Black", cost:"1.33", repeat:false},
+    {item:"72373", vendor:"HJXD16004W", desc:"30in Posable Reaper - White", cost:"1.33", repeat:false},
+    {item:"66632", vendor:"CY2912J", desc:"6in Bloody Cocktail", cost:"1.90", repeat:false},
+    {item:"66633", vendor:"CY2914J", desc:"6in Bloody Parfait", cost:"1.88", repeat:false},
+    {item:"66634", vendor:"CY2916J", desc:"ASH TT Bloody Dessert Cup", cost:"1.85", repeat:false},
+    {item:"66635", vendor:"CY2917J", desc:"3.5in Bloody Dessert Cup w/Bone", cost:"1.85", repeat:false},
+    {item:"67326", vendor:"CY2987J", desc:"5in Bloody Cake", cost:"2.28", repeat:false},
+    {item:"66990", vendor:"25S4790", desc:"16in Dark Iridescent Skeleton", cost:"1.60", repeat:false},
+    {item:"66996", vendor:"25S4802", desc:"15.5\" Dark Iridescent Skeleton Mermaid", cost:"1.78", repeat:false},
+    {item:"63853", vendor:"CY22075", desc:"ASH Bag of Skulls", cost:"2.25", repeat:false},
+    {item:"78148", vendor:"ARW19-62", desc:"ASH Bag Of Doll", cost:"1.50", repeat:false},
+    {item:"65014", vendor:"FL23113Q", desc:"Bag of 2\" Mossy Skulls - 6Pk", cost:"1.73", repeat:false},
+    {item:"65409", vendor:"HC18-23036K", desc:"39\" Hanging Bride", cost:"3.95", repeat:false},
+    {item:"65075", vendor:"FL23310Q-ZJ408CLW", desc:"43.3\" Animated Hanging Clown", cost:"7.25", repeat:false},
+    {item:"67626", vendor:"ARW25S-74", desc:"16\" Pirate Skeleton", cost:"1.35", repeat:false},
+    {item:"67627", vendor:"ARW25-67", desc:"16\" Cow Girl Skeleton", cost:"1.48", repeat:false},
+    {item:"67628", vendor:"CY3055J-M-AD229CM-GM", desc:"ASH Lightup Sonic Bloody Eyeball Medium", cost:"11.50", repeat:false},
+    {item:"67632", vendor:"ARW24Q-1", desc:"16in Groom Skeleton", cost:"1.48", repeat:false},
+    {item:"67624", vendor:"HC18-25114Q-ZJ501A", desc:"55in Hanging Animated Reaper", cost:"6.85", repeat:false},
+    {item:"67642", vendor:"HC18-26007", desc:"20in Hanging Ghost", cost:"0.90", repeat:false},
+    {item:"67643", vendor:"HC18-26008", desc:"20in Hanging  Ghost", cost:"1.00", repeat:false},
+    {item:"67644", vendor:"LL5-60032DZ-AD050F", desc:"5ft Animated Standing Witch Green Face and Hands", cost:"24.00", repeat:false},
+    {item:"67645", vendor:"LL5-68032", desc:"ASH Hanging Witch", cost:"10.50", repeat:false},
+    {item:"67648", vendor:"LL5-60161", desc:"ASH Hanging Girl Grey", cost:"4.76", repeat:false},
+    {item:"67649", vendor:"LL5-60162", desc:"ASH Hanging Girl Red", cost:"4.97", repeat:false},
+    {item:"67650", vendor:"HR90-202S", desc:"36in Girl", cost:"4.55", repeat:false},
+    {item:"67651", vendor:"HR130-18S", desc:"36in Girl", cost:"3.78", repeat:false},
+    {item:"67652", vendor:"HY3-320", desc:"Goat Head", cost:"4.85", repeat:false},
+    {item:"67646", vendor:"HC18-26010-WS672W-2", desc:"5ft Sonic Ghost", cost:"6.27", repeat:false},
+    {item:"67654", vendor:"HC18-26009-WS672W-2", desc:"3ft Sonic Ghost", cost:"4.97", repeat:false},
+    {item:"67680", vendor:"HFL077-WS010R", desc:"Light Up Hanging Crossbones", cost:"3.75", repeat:false},
+    {item:"67682", vendor:"LL5-60091SDZ-WS955-R", desc:"6.6ft Standing Ghost with white Lights", cost:"19.50", repeat:false},
+    {item:"67687", vendor:"LL5-62082QXZ-AD015T", desc:"Animated Zombie Groundbreaker", cost:"11.50", repeat:false},
+    {item:"67689", vendor:"HZ25-125", desc:"6.8\" Sonic Skull", cost:"8.45", repeat:false},
+    {item:"67710", vendor:"CY3142J", desc:"7in Finger Hot Dog", cost:"4.40", repeat:false},
+    {item:"67711", vendor:"CY3143J", desc:"ASH TT Finger Hot Dog", cost:"4.30", repeat:false},
+    {item:"67712", vendor:"CY3155J", desc:"8in Wooden Dish With Roast Fingers", cost:"2.38", repeat:false},
+    {item:"67713", vendor:"CY3154J", desc:"8in Wooden Dish With Roast Fingers", cost:"3.44", repeat:false},
+    {item:"67714", vendor:"CY3135J", desc:"2.7in Ice Cream Glass With eye, biscuit & Icecream", cost:"1.35", repeat:false},
+    {item:"67715", vendor:"CY3141J", desc:"3.9in Cupcake With Ice Cream and Body Part", cost:"1.35", repeat:false},
+    {item:"67716", vendor:"CY3140J", desc:"ASH TT Cupcake", cost:"1.35", repeat:false},
+    {item:"67717", vendor:"CY3139J", desc:"2.7in Cupcake With Body Part and Fly", cost:"1.25", repeat:false},
+    {item:"67718", vendor:"CY3153J", desc:"2.6in Cupcake With Eye", cost:"1.25", repeat:false},
+    {item:"67719", vendor:"CY3144J", desc:"ASH TT Bloody doughut with eye pink", cost:"1.35", repeat:false},
+    {item:"67720", vendor:"CY3145J", desc:"ASH TT Bloody doughut with eye brown", cost:"1.35", repeat:false},
+    {item:"67721", vendor:"CY3138J", desc:"3.5in Sliced Bread With Egg and Eye", cost:"1.45", repeat:false},
+    {item:"67722", vendor:"CY3152J", desc:"2.3in Sliced Toast With Egg，Eye and Fly", cost:"1.25", repeat:false},
+    {item:"67723", vendor:"CY3151J", desc:"3.9in Corked Bottle With Eyes，Half Finger and Maggot", cost:"1.86", repeat:false},
+    {item:"67724", vendor:"CY3149J", desc:"4.7in Maggot in Box", cost:"2.75", repeat:false},
+    {item:"67725", vendor:"CY3146J", desc:"4.7in Earthworn in Bbox", cost:"2.68", repeat:false},
+    {item:"67726", vendor:"CY3137J", desc:"3in Mousse Cake With Body Part", cost:"1.94", repeat:false},
+    {item:"67727", vendor:"CY3156J", desc:"3.2in Mousse Cake With Fingers and Glass", cost:"1.94", repeat:false},
+    {item:"67728", vendor:"CY3136J", desc:"ASH TT Bloody Slide of Cake", cost:"1.94", repeat:false},
+    {item:"67729", vendor:"CY3105J", desc:"2.7in Ice Cream Cup With 1 Eye", cost:"1.29", repeat:false},
+    {item:"67730", vendor:"CY3134J", desc:"ASH TT Bloody Cocktail With Eyeballs", cost:"2.39", repeat:false},
+    {item:"67745", vendor:"CY3157J", desc:"5.51in Glass With Ice Cream and Body Parts", cost:"1.55", repeat:false},
+    {item:"67746", vendor:"CY3150J", desc:"3.7inch Goblet With Brain，Maggot and Raspberry", cost:"1.47", repeat:false},
+    {item:"67747", vendor:"CY3133J", desc:"6.3in Glass With Body Part and French Fries", cost:"2.56", repeat:false},
+    {item:"67748", vendor:"CY3132J", desc:"3.5 in Cocktail Glass With Rat, Body Part and Ice Cream", cost:"1.47", repeat:false},
+    {item:"67749", vendor:"CY3131J", desc:"5in Cocktail Glass Wth Body Part and Ice Cream", cost:"2.52", repeat:false},
+    {item:"67750", vendor:"CY3106J", desc:"2.7in Cup With Brain", cost:"1.09", repeat:false},
+    {item:"67751", vendor:"CY3107J", desc:"2.7in Cup Wth Heart", cost:"1.09", repeat:false},
+    {item:"67752", vendor:"CY3130J", desc:"ASH TT Coffee With Brain", cost:"3.61", repeat:false},
+    {item:"67753", vendor:"CY3102J", desc:"5.9in Coffee Cup With Body Parts and Spider", cost:"3.61", repeat:false},
+    {item:"67754", vendor:"CY3101J", desc:"5.9in Coffee Cup With Body Parts and Biscuit", cost:"3.61", repeat:false},
+    {item:"67755", vendor:"CY3104J", desc:"3.5in Coffee Cup With Eye and Fly", cost:"1.24", repeat:false},
+    {item:"67756", vendor:"CY3103J", desc:"3.5n Coffee Cup With Finger and Fly", cost:"1.24", repeat:false},
+    {item:"67757", vendor:"CY3120J", desc:"10in  Pan With Body Part and French Fries", cost:"3.84", repeat:false},
+    {item:"67758", vendor:"CY3109J", desc:"ASH TT Finger Skewer", cost:"1.24", repeat:false},
+    {item:"67759", vendor:"CY3119J", desc:"6.6in Finger Skewer", cost:"1.24", repeat:false},
+    {item:"67760", vendor:"CY3118J", desc:"7in  Finger Skewer", cost:"0.92", repeat:false},
+    {item:"67761", vendor:"CY3117J", desc:"7in  Finger Skewer", cost:"0.92", repeat:false},
+    {item:"67762", vendor:"CY3116J", desc:"7in  Finger Skewer", cost:"0.92", repeat:false},
+    {item:"67763", vendor:"CY3115J", desc:"7in  Finger Skewer", cost:"0.92", repeat:false},
+    {item:"67764", vendor:"CY3114J", desc:"Skewer with eye, brain and finger", cost:"1.23", repeat:false},
+    {item:"67765", vendor:"CY3110J", desc:"Skewer with finger and heart", cost:"1.23", repeat:false},
+    {item:"67766", vendor:"CY3113J", desc:"Skewer with fingers", cost:"1.23", repeat:false},
+    {item:"67767", vendor:"CY3112J", desc:"Skewer with eyes and finger", cost:"1.23", repeat:false},
+    {item:"67768", vendor:"CY3111J", desc:"Skewer with eyeballs", cost:"1.23", repeat:false},
+    {item:"67769", vendor:"CY3108J", desc:"10in Burned Hand", cost:"3.96", repeat:false},
+    {item:"67770", vendor:"CY3100J", desc:"5.9in Pot With Body Parts", cost:"3.26", repeat:false},
+    {item:"67771", vendor:"CY3099J", desc:"5.9in Pot With Body Parts", cost:"3.26", repeat:false},
+    {item:"67772", vendor:"CY2915J", desc:"5.9in Food in Goblet", cost:"2.39", repeat:false},
+    {item:"67773", vendor:"CY2913J", desc:"6in Body Parts in Goblet", cost:"2.39", repeat:false},
+    {item:"67774", vendor:"CY2989J", desc:"6in Bloody Cake With Skeleton Part", cost:"4.58", repeat:false},
+    {item:"67775", vendor:"CY2990J", desc:"6in Bloody Cake With Biscuits", cost:"4.32", repeat:false},
+    {item:"67776", vendor:"CY2988J", desc:"ASH TT Bloody Heart Shape Cake", cost:"2.38", repeat:false},
+    {item:"67777", vendor:"XWH5253-F", desc:"21in Tombstone  Set of 3", cost:"3.85", repeat:false},
+    {item:"67778", vendor:"XWH5254-F", desc:"21in Tombstone  Set of 3", cost:"3.85", repeat:false},
+    {item:"67779", vendor:"XWH5255-F", desc:"21in Tombstone  Set of 3", cost:"3.85", repeat:false},
+    {item:"67780", vendor:"XWH5252-F", desc:"21in Tombstone  Set of 3", cost:"3.85", repeat:false},
+    {item:"67781", vendor:"XWH5257-F", desc:"21in Tombstone  Set of 3", cost:"3.85", repeat:false},
+    {item:"67792", vendor:"CY3056J-S-1-AD229CF", desc:"7.8in  Lightup Sonic Eyeball", cost:"7.82", repeat:false},
+    {item:"67793", vendor:"CY3055J-M-1-AD229CM-GM", desc:"11.8in Lightup Sonic Eyeball", cost:"11.40", repeat:false},
+    {item:"67794", vendor:"CY3056J-L-1-AD229HM", desc:"15.7in Lightup Sonic Eyeball", cost:"19.25", repeat:false},
+    {item:"67795", vendor:"CY3056J-L-AD229HM", desc:"ASH Lightup Sonic Bloody Eyeball Large", cost:"19.65", repeat:false},
+    {item:"67799", vendor:"CY3154J-1", desc:"Pizza With Eyeballs and finger", cost:"3.54", repeat:false},
+    {item:"67800", vendor:"CY3159J", desc:"Halloween Skull Cocktail", cost:"2.39", repeat:false},
+    {item:"67806", vendor:"HC18-26046", desc:"36in Hanging Layered Ghost", cost:"1.81", repeat:false},
+    {item:"67807", vendor:"HC18-26047", desc:"36in Hanging Layered Ghost-Green", cost:"1.81", repeat:false},
+    {item:"67808", vendor:"HC18-26048", desc:"36in Hanging Layered Ghost-Purple", cost:"1.81", repeat:false},
+    {item:"67809", vendor:"HC18-26049", desc:"36in Hanging Layered Ghost-Orange", cost:"1.81", repeat:false},
+    {item:"67810", vendor:"HC18-26050", desc:"20in Hanging  Ghost-Green", cost:"0.97", repeat:false},
+    {item:"67811", vendor:"HC18-26051", desc:"20in Hanging Ghost-Orange", cost:"0.97", repeat:false},
+    {item:"67812", vendor:"HC18-26052", desc:"20in Hanging  Ghost-Pink", cost:"0.97", repeat:false},
+    {item:"67813", vendor:"HC18-26053", desc:"21in Hanging Ghost-Green Hat", cost:"1.07", repeat:false},
+    {item:"67814", vendor:"HC18-26054", desc:"21in Hanging Ghost-Orange Hat", cost:"1.07", repeat:false},
+    {item:"67815", vendor:"HC18-26055", desc:"21in Hanging Ghost-Purple Hat", cost:"1.07", repeat:false},
+    {item:"67816", vendor:"HJD27026-S-WS851-2", desc:"5ft Hanging Sonic PKN Man", cost:"8.85", repeat:false},
+    {item:"67817", vendor:"FL26087S", desc:"Eyeball Spider", cost:"2.15", repeat:false},
+    {item:"67818", vendor:"FL26083S", desc:"ASH Doll Head Spider", cost:"2.15", repeat:false},
+    {item:"66443", vendor:"XWH4885M", desc:"ASH TOMBSTONE 35IN HORSEMAN", cost:"4.80", repeat:true},
+    {item:"64900", vendor:"LL5-30273-Z03M", desc:"ASH HANGING REAPER ANIMATED", cost:"8.15", repeat:true},
+    {item:"67268", vendor:"LL4-58032-WS643", desc:"ASH HANGING WITCH SONIC", cost:"12.35", repeat:true},
+    {item:"67267", vendor:"LL4-5003DZ-AD050F", desc:"ASH TT 5FT WITCH ANIMATED", cost:"24.00", repeat:true},
+    {item:"65771", vendor:"HC18-683XM", desc:"ASH WALL HANGING GHOST SMILE", cost:"0.90", repeat:true},
+    {item:"85865", vendor:"HC18-682", desc:"ASH WALL HANGING GHOST SHOCK", cost:"0.90", repeat:true},
+    {item:"75062", vendor:"LL16027", desc:"ASH TT SPIDER BLK", cost:"3.79", repeat:true},
+    {item:"65695", vendor:"HC18-23346", desc:"ASH WALL HANGING LAYERED GHOST", cost:"1.81", repeat:true},
+    {item:"63749", vendor:"TPY2021-2B", desc:"ASH FREAKY FABRIC BLK", cost:"0.80", repeat:true},
+    {item:"05996", vendor:"TPY10-9", desc:"ASH FREAKY FABRIC WHT", cost:"0.80", repeat:true},
+    {item:"66215", vendor:"HJD25002-S-WS851-2", desc:"ASH HANGING SONIC PKN MAN", cost:"8.85", repeat:true},
+    {item:"71039", vendor:"HJD15020", desc:"ASH HANGING REAPER GHOST BLK", cost:"2.42", repeat:true},
+    {item:"66583", vendor:"FL24386Q-ZJ408BG", desc:"ASH HANGING GIRL ANIMATE", cost:"6.25", repeat:true},
+    {item:"62731", vendor:"FL2020-192", desc:"ASH TT BABY HEAD SPIDER", cost:"2.15", repeat:true},
+    {item:"67314", vendor:"FL25344Q", desc:"ASH TT SKULL SPIDER", cost:"2.05", repeat:true},
+    {item:"72942", vendor:"HY5-10", desc:"ASH WALL PLASTIC HOOK HAND", cost:"2.25", repeat:true},
+    {item:"66448", vendor:"HFL077", desc:"ASH HANGING CROSSBONES", cost:"2.56", repeat:true},
+    {item:"67273", vendor:"ARW26Q-128", desc:"ASH HANG 16IN SKELE MULTI HAIR", cost:"1.44", repeat:true},
+    {item:"65351", vendor:"ARW24K-41", desc:"ASH HANG 16IN SKELE CONVICT", cost:"1.48", repeat:true},
+    {item:"61297", vendor:"FL19454-1", desc:"ASH BODY PART EYE BALL", cost:"1.00", repeat:false},
+    {item:"66960", vendor:"XWH5043-F", desc:"ASH TOMBSTONE SET OF 6", cost:"4.75", repeat:false},
+    {item:"67263", vendor:"XWH5076-F", desc:"ASH TOMBSTONE 35IN DUST", cost:"4.50", repeat:false},
+    {item:"82467", vendor:"ARW12-83A", desc:"ASH SKULL HEAD WITH MESH BAG", cost:"1.08", repeat:true},
+    {item:"66332", vendor:"XWH4879", desc:"ASH TOMBSTONE 35IN MY BELOVED", cost:"4.80", repeat:false},
+    {item:"66439", vendor:"XWH4883M", desc:"ASH TOMBSTONE 35IN POE", cost:"4.80", repeat:true}
+  ],
+  "Old Time Pottery": [
+    {item:"63227-25", vendor:"ARW22-55", desc:"17.3\" Hanging Skeleton Girl", cost:"1.77", repeat:true},
+    {item:"64360-25", vendor:"HC18-22005", desc:"20\" Creepy Girl Black W/Black Hair", cost:"1.30", repeat:true},
+    {item:"66347-25", vendor:"FL24130J", desc:"7.9\" Doll Head Spider", cost:"0.90", repeat:true},
+    {item:"66913-25", vendor:"XWH4610-K", desc:"6PK TOMBSTONE SET", cost:"4.98", repeat:true},
+    {item:"66914-25", vendor:"XWH4699-K", desc:"21\" Tombstone Set of 6", cost:"4.98", repeat:true},
+    {item:"66916-25", vendor:"ARW25-170", desc:"16IN HANGING SKETON GIRL", cost:"1.77", repeat:true},
+    {item:"66917-25", vendor:"ARW25-171", desc:"16IN HANGING SKETON GIRL", cost:"1.77", repeat:true},
+    {item:"67253-26", vendor:"HJZ26004-Q-AD015NW", desc:"72.05\" Standing Animated Witch", cost:"18.75", repeat:true},
+    {item:"73349-SKEL-25", vendor:"FL15028LW", desc:"7' STATIC GHOST", cost:"2.75", repeat:true},
+    {item:"79406-SKEL-25", vendor:"HJD18029GR-JX21-6", desc:"67\" LIGHT UP HANGING GREY REAP", cost:"5.85", repeat:true},
+    {item:"62874V", vendor:"LL4-0204-AD015T-210", desc:"19.5in Animated Groundbreaker Pumpkin Man", cost:"12.00", repeat:true},
+    {item:"63227-25V", vendor:"ARW22-55", desc:"17.3\" Hanging Skeleton Girl", cost:"1.77", repeat:true},
+    {item:"64049-25V", vendor:"ZSR2021-276-WS665F", desc:"51\" Hanging Sonic Witch", cost:"5.75", repeat:true},
+    {item:"64360-25V", vendor:"HC18-22005", desc:"20\" Creepy Girl Black W/Black Hair", cost:"1.30", repeat:true},
+    {item:"64377-25V", vendor:"HC18-22095", desc:"20\" Pumpkin Reaper W/Chains", cost:"1.80", repeat:true},
+    {item:"65796V", vendor:"LL5-30043ADZ-Z10Y", desc:"ANIMATED SHKNG SNSTR SCAR", cost:"20.05", repeat:true},
+    {item:"65797V", vendor:"LL5-30079DZ-Z37M", desc:"70'' Standing Jaw Popping Reaper", cost:"20.30", repeat:true},
+    {item:"66018-25V", vendor:"FL24004K", desc:"23.6\" White Ghost Set 3", cost:"2.85", repeat:true},
+    {item:"66092V", vendor:"HR90-199Q-AD015NW", desc:"19.6\" Animated Witch with Cauldron", cost:"9.08", repeat:true},
+    {item:"66173V", vendor:"HC18-24042-WS672R", desc:"47.2\" Flash Lights Hanging Scarecrow", cost:"5.85", repeat:true},
+    {item:"66178V", vendor:"HC18-24110-WS672R", desc:"5 FT  Light Up Hanging Devil", cost:"6.20", repeat:true},
+    {item:"66347-25V", vendor:"FL24130J", desc:"7.9\" Doll Head Spider", cost:"0.90", repeat:true},
+    {item:"66352-25V", vendor:"FL24135J", desc:"7.9\" Doll Spider - Gray Look", cost:"0.90", repeat:true},
+    {item:"66390-25V", vendor:"XWH4833-K", desc:"21.1\" Tombstone Set of 6", cost:"5.40", repeat:true},
+    {item:"66505V", vendor:"HJZ25018-Q-AD050M", desc:"66.93\"Animated Standing Pumpkin Scarecrow", cost:"17.65", repeat:true},
+    {item:"66913-25V", vendor:"XWH4610-K", desc:"6PK TOMBSTONE SET", cost:"4.98", repeat:true},
+    {item:"66914-25V", vendor:"XWH4699-K", desc:"21\" Tombstone Set of 6", cost:"4.98", repeat:true},
+    {item:"66916-25V", vendor:"ARW25-170", desc:"16IN HANGING SKETON GIRL", cost:"1.77", repeat:true},
+    {item:"66917-25V", vendor:"ARW25-171", desc:"16IN HANGING SKETON GIRL", cost:"1.77", repeat:true},
+    {item:"66919V", vendor:"HC18-22005-1", desc:"20IN HNG CREEPY GIRL RED", cost:"1.30", repeat:true},
+    {item:"67147V", vendor:"HC18-25025S", desc:"27.6\" Hanging Witch - w Broom", cost:"2.05", repeat:true},
+    {item:"67253-26V", vendor:"HJZ26004-Q-AD015NW", desc:"72.05\" Standing Animated Witch", cost:"18.75", repeat:true},
+    {item:"73320-25V", vendor:"ARW08-37X-400N", desc:"16\" Skeleton Pirate", cost:"1.25", repeat:true},
+    {item:"73349-SKEL-25V", vendor:"FL15028LW", desc:"7' STATIC GHOST", cost:"2.75", repeat:true},
+    {item:"75673V", vendor:"LL4-60034DZ-AD304", desc:"72in Standing Witch w/Book", cost:"23.19", repeat:true},
+    {item:"79406-SKEL-25V", vendor:"HJD18029GR-JX21-6", desc:"67\" LIGHT UP HANGING GREY REAP", cost:"5.85", repeat:true},
+    {item:"66056", vendor:"KH2024YF18", desc:"6.5 FT Door Curtain", cost:"2.65", repeat:false},
+    {item:"67388", vendor:"BF26148-ZJ501C-Q", desc:"60.2in Hanging Animated Clown - Black/White", cost:"9.05", repeat:false},
+    {item:"67597", vendor:"HC6-24025-ZJ501C", desc:"Fire Clown", cost:"7.00", repeat:false},
+    {item:"67408", vendor:"HC18-25093-CF25W", desc:"35.4in Hanging LU Ghost - White", cost:"3.90", repeat:false},
+    {item:"67357", vendor:"HC18-24122-Z39DH", desc:"47.2\" Hanging Animated Reaper", cost:"6.75", repeat:false},
+    {item:"67601", vendor:"LL5-50073QDZ-SZ62M-Z36S", desc:"67\" Animated Soul Seeker", cost:"31.00", repeat:false},
+    {item:"95725", vendor:"BF2446A-K/BF2446B-K/BF2446C-K", desc:"43.3\" Hanging Reaper A3", cost:"2.30", repeat:false},
+    {item:"95589", vendor:"ARW23-38-400W/ARW23-30", desc:"16\" Skeleton Doll A2", cost:"1.38", repeat:false},
+    {item:"95838", vendor:"HC18-25145/HC18-24026/HC18-24007PFA", desc:"19.7\" Creepy Doll A3", cost:"1.75", repeat:false},
+    {item:"95837", vendor:"ARW22-83/ARW22-11/ARW21-25/ARW23-27/ARW08-37X-400W/ARW24K-41", desc:"16\" Dressed Skeleton A6", cost:"1.26", repeat:false},
+    {item:"66585", vendor:"XWH4720F", desc:"6pcs Tombstone Set", cost:"4.50", repeat:false},
+    {item:"67741", vendor:"XWH5269-F-ZJ501NX", desc:"60.2\" Hanging Shaking Clown", cost:"16.40", repeat:false},
+    {item:"67739", vendor:"WY2724J-ZJ406B", desc:"11.8\" Animated Eating-man Flower", cost:"8.25", repeat:false},
+    {item:"67782", vendor:"LL5-60091SRTE-WS955", desc:"5.5FT Standing Ghost with White Lights", cost:"21.25", repeat:false},
+    {item:"67783", vendor:"HJZ27002-Q-AD015DOL", desc:"47.24\"Standing Animated Girl", cost:"13.90", repeat:false},
+    {item:"67784", vendor:"LL5-60052QDZ-Z95F", desc:"5.6FT Standing Neck Fracture Clown", cost:"24.65", repeat:false},
+    {item:"67786", vendor:"SS-26R", desc:"4FT Witch Girl Monster Kids", cost:"24.10", repeat:false},
+    {item:"67787", vendor:"HC18-26014Q-CF25W", desc:"5FT Hanging Ghost with Witch Hat", cost:"5.05", repeat:false},
+    {item:"67789", vendor:"LL5-60665QRDZ-Z95D", desc:"5.6FT Standing Neck Fracture Ghost", cost:"24.10", repeat:false},
+    {item:"67791", vendor:"HC12-26051QTDZ-AD015T-20W", desc:"62.99\" Standing Animated Ghost", cost:"18.50", repeat:false},
+    {item:"10299", vendor:"KH2025YF04", desc:"Garage Door Cover - Christmas Scene", cost:"12.10", repeat:false},
+    {item:"10300", vendor:"KH2025YF03", desc:"Garage Door Cover - Winter Deer", cost:"12.10", repeat:false},
+    {item:"65796", vendor:"LL5-30043ADZ-Z10Y", desc:"6 SHAKE SINISTR SCARECRW", cost:"20.05", repeat:true},
+    {item:"65797", vendor:"LL5-30079DZ-Z37M", desc:"70 JAW DROPPING REAPER", cost:"20.30", repeat:true},
+    {item:"66505", vendor:"HJZ25018-Q-AD050M", desc:"67 ANIM STAND PMKN SCRW", cost:"17.65", repeat:true},
+    {item:"66919", vendor:"HC18-22005-1", desc:"20IN HNG CREEPY GIRL RED", cost:"1.30", repeat:true},
+    {item:"75673", vendor:"LL4-60034DZ-AD304", desc:"72.05 GREEN WITCH HOLDING A BO", cost:"23.19", repeat:true},
+    {item:"67322", vendor:"ARW600HB", desc:"23.6\" Hanging Devil Skeleton - Stone Finished", cost:"2.80", repeat:false},
+    {item:"67599", vendor:"LL5-50551QDZ-ZJ430X", desc:"69\" Animated Standing Stretch Clown", cost:"29.20", repeat:false},
+    {item:"67336", vendor:"HC9-25005-JH001", desc:"25.2in Animated Broom", cost:"5.45", repeat:false},
+    {item:"65970", vendor:"FL24061Q-WS802R", desc:"3FT LU Hanging Doll Black", cost:"5.65", repeat:false},
+    {item:"95074", vendor:"HC18-18051-166/HC18-19168/HC18-18051B-166", desc:"21in Faceless Reaper A3", cost:"1.45", repeat:false},
+    {item:"63227", vendor:"ARW22-55", desc:"17.3\" Hanging Skeleton Girl", cost:"1.77", repeat:false},
+    {item:"94443", vendor:"HC18-13034-1/HC18-13034-2/HC18-16073", desc:"18\" Hanging Ghost- Assortment", cost:"0.92", repeat:false},
+    {item:"80012", vendor:"ARW07-99", desc:"LIFESIZE GRDBRKNG SKELETON", cost:"4.35", repeat:false},
+    {item:"64360", vendor:"HC18-22005", desc:"20\" Creepy Girl Black W/Black Hair", cost:"1.30", repeat:false},
+    {item:"66347", vendor:"FL24130J", desc:"7.9\" Doll Head Spider", cost:"0.90", repeat:false},
+    {item:"66390", vendor:"XWH4833-K", desc:"21.1\" Tombstone Set of 6", cost:"5.40", repeat:false},
+    {item:"66352", vendor:"FL24135J", desc:"7.9\" Doll Spider - Gray Look", cost:"0.90", repeat:false},
+    {item:"66173", vendor:"HC18-24042-WS672R", desc:"47.2\" Flash Lights Hanging Scarecrow", cost:"5.85", repeat:false},
+    {item:"66178", vendor:"HC18-24110-WS672R", desc:"5 FT  Light Up Hanging Devil", cost:"6.20", repeat:false},
+    {item:"67147", vendor:"HC18-25025S", desc:"27.6\" Hanging Witch - w Broom", cost:"2.05", repeat:false},
+    {item:"67253", vendor:"HJZ26004-Q-AD015NW", desc:"72.05\" Standing Animated Witch", cost:"18.75", repeat:false},
+    {item:"73349", vendor:"FL15028LW", desc:"7FT HANGING GHOST", cost:"2.75", repeat:false},
+    {item:"79406", vendor:"HJD18029GR-JX21-6", desc:"67\" LIGHT UP HANGING GREY REAP", cost:"5.85", repeat:false},
+    {item:"62874", vendor:"LL4-0204-AD015T-210", desc:"19.5in Animated Groundbreaker Pumpkin Man", cost:"12.00", repeat:false},
+    {item:"64049", vendor:"ZSR2021-276-WS665F", desc:"51\" Hanging Sonic Witch", cost:"5.75", repeat:false},
+    {item:"66018", vendor:"FL24004K", desc:"23.6\" White Ghost Set 3", cost:"2.85", repeat:false},
+    {item:"66092", vendor:"HR90-199Q-AD015NW", desc:"19.6\" Animated Witch with Cauldron", cost:"9.08", repeat:false},
+    {item:"64377", vendor:"HC18-22095", desc:"20\" Pumpkin Reaper W/Chains", cost:"1.80", repeat:false},
+    {item:"73320", vendor:"ARW08-37X-400W", desc:"16in Hanging Skeleton Pirate", cost:"1.25", repeat:false},
+    {item:"06501", vendor:"HC15-50", desc:"Furry Rat Prop", cost:"1.65", repeat:false},
+    {item:"75064", vendor:"LL16028WB", desc:"Hairy Oversized Spider", cost:"5.50", repeat:false},
+    {item:"79107", vendor:"XHY18066B", desc:"24 Foot Gigantic Rope Web - White", cost:"4.15", repeat:false},
+    {item:"64727", vendor:"FL22465", desc:"197\" Elastic Webbing", cost:"1.40", repeat:false},
+    {item:"83552", vendor:"ARW13-71", desc:"6PK 4IN SKULLS", cost:"1.90", repeat:false},
+    {item:"77847", vendor:"XWH4045", desc:"4pk 16in Tombstone-Mansion", cost:"2.25", repeat:false},
+    {item:"67372", vendor:"HJQQ26016-J-SZ031X", desc:"86.6\" animated Swinging Acrobatic Clowns", cost:"16.15", repeat:false},
+    {item:"95781", vendor:"CY2916J/CY2917J", desc:"Faux Body Parts Cocktail A2 (26 Gabe's)", cost:"1.90", repeat:false},
+    {item:"95782", vendor:"CY2776/CY2778", desc:"Faux Body Parts A2 (26 Gabe's)", cost:"3.15", repeat:false},
+    {item:"67602", vendor:"HY2-40A-WS606", desc:"Animated Black Cat with Witch Hat", cost:"7.85", repeat:false},
+    {item:"66002", vendor:"HR90-198Q-ZJ406B", desc:"17.7\" Animated Witch with Port", cost:"7.70", repeat:false},
+    {item:"95663", vendor:"HC18-22083/HC18-23037AK", desc:"27.5 Creepy Doll A2 (24 SUN)", cost:"1.55", repeat:false},
+    {item:"95463", vendor:"HC18-20074/HC18-20075/HC18-20084", desc:"Hanging Scarecrow Pumpkin Assortment", cost:"1.60", repeat:false},
+    {item:"67140", vendor:"HC18-25018S", desc:"23.6\" Hanging Scarecrow", cost:"1.91", repeat:false},
+    {item:"85549", vendor:"HJD11022-AD011T", desc:"48\" LU WHITE REAPER", cost:"4.40", repeat:false},
+    {item:"85550", vendor:"HJD11023-AD011T", desc:"Hanging Light Up Black Reaper", cost:"4.40", repeat:false},
+    {item:"82327", vendor:"HR90-42PGEX", desc:"Small Faceless Spectre in Chains", cost:"6.90", repeat:false},
+    {item:"66703", vendor:"HJD25069-WS850", desc:"8.4FT Hanging Sonic Clown", cost:"21.35", repeat:false},
+    {item:"95401", vendor:"HC18-18083Z/HC18-18083G/HC18-18083L", desc:"28 Hat Ghost A3", cost:"1.35", repeat:false},
+    {item:"75392", vendor:"HC18-16071", desc:"32\" Hanging Ghost", cost:"2.10", repeat:false},
+    {item:"66623", vendor:"CG25085J", desc:"9.8\" Fake Rose Bouquet with Spider", cost:"1.30", repeat:false},
+    {item:"66376", vendor:"CG25039", desc:"Halloween Black Rose w/ Skulls", cost:"1.15", repeat:false},
+    {item:"66626", vendor:"CG25137", desc:"Black Branch w/5 Pcs Skull", cost:"1.50", repeat:false},
+    {item:"66625", vendor:"CG25136", desc:"Black Branch w/3pcs Skull", cost:"1.00", repeat:false},
+    {item:"66368", vendor:"HR130-18", desc:"51in Hanging Bloody Eye Doll", cost:"4.00", repeat:false},
+    {item:"67605", vendor:"HC6-22046-ZJ501C", desc:"51\" Shaking Green Clown", cost:"7.35", repeat:false},
+    {item:"66913", vendor:"XWH4610-K", desc:"6PK TOMBSTONE SET", cost:"4.98", repeat:false},
+    {item:"66914", vendor:"XWH4699-K", desc:"21\" Tombstone Set of 6", cost:"4.98", repeat:false},
+    {item:"67801", vendor:"ARW27-63", desc:"16IN HANGING SKETON GIRL", cost:"1.77", repeat:false},
+    {item:"67802", vendor:"ARW27-62", desc:"16IN HANGING SKETON GIRL", cost:"1.77", repeat:false},
+    {item:"63186", vendor:"ARW22-11", desc:"16\" Hanging Skeleton Bride", cost:"1.35", repeat:false},
+    {item:"63627", vendor:"ARW21-25", desc:"16in Hanging Skeleton Clown", cost:"1.35", repeat:false},
+    {item:"65351", vendor:"ARW24K-41", desc:"16in Hanging Skeleton Convict", cost:"1.45", repeat:false},
+    {item:"65687", vendor:"ARW24K-195", desc:"15.7\" Dressed Pumpkin Skeleton", cost:"1.35", repeat:false},
+    {item:"67021", vendor:"ARW26Q-28", desc:"15.7\"  Hanging Dressed Skeleton - Blue", cost:"1.35", repeat:false},
+    {item:"95655", vendor:"BF2426-K/BF2427-K/BF2428-K/BF2431-K", desc:"6\" Dressed Skeleton A4", cost:"1.00", repeat:false},
+    {item:"67464", vendor:"KH2024YF104", desc:"Halloween Door Curtain Teeth", cost:"12.10", repeat:false},
+    {item:"67803", vendor:"KH2025YF58", desc:"Garage Door Cover - I See You", cost:"7.40", repeat:false},
+    {item:"67804", vendor:"KH2025YF44", desc:"Garage Door Cover - Skeleton", cost:"7.40", repeat:false},
+    {item:"67805", vendor:"KH2025YF41", desc:"Garage Door Cover - Reaper", cost:"12.10", repeat:false}
+  ],
+  "PFA": [
+    {item:"65315", vendor:"ZSR2022-347K-AD016J", desc:"51in Animated Pumpkin Man", cost:"6.85", repeat:true},
+    {item:"66585", vendor:"XWH4720F", desc:"6 Pk TOMBSTONE SET", cost:"4.97", repeat:true},
+    {item:"67341", vendor:"LL5-50075QDZ-Z71M", desc:"70.9\" Standing Animated Scarecrow", cost:"25.00", repeat:true},
+    {item:"67372", vendor:"HJQQ26016-J-SZ031X", desc:"51in Animated Swinging Acrobatic Clowns", cost:"15.35", repeat:true},
+    {item:"95631", vendor:"XWH4323/XWH4321/XWH4320", desc:"16.5\" Tombstone 3 Asst", cost:"0.69", repeat:true},
+    {item:"94851", vendor:"HC18-18083/HC18-18083Z/HC18-18083G/HC18-18083L", desc:"28in Hng Ghost with Hat A/4 (19) Top Item", cost:"1.30", repeat:true},
+    {item:"65967", vendor:"LL24009-1P", desc:"60\" Big Light Up Spider Purple Lights", cost:"6.28", repeat:true},
+    {item:"65964", vendor:"FL24063Q", desc:"27.6\" Hanging Bloody Doll", cost:"2.33", repeat:true},
+    {item:"65745", vendor:"FL23463Q", desc:"Faux Eyeballs In Mesh Bag - Set of 8 Top Item", cost:"0.70", repeat:true},
+    {item:"65317", vendor:"FL23285K", desc:"19.7\" Hanging Black Bat", cost:"2.55", repeat:true},
+    {item:"95692", vendor:"HC18-24026/HC18-24007", desc:"20\" Creepy Dolls A2 (25 PFA)", cost:"1.65", repeat:true},
+    {item:"95629", vendor:"HJXD16004B/HJXD16004W", desc:"30in Hanging Reaper A/2 (24 PFA)", cost:"1.40", repeat:true},
+    {item:"95740", vendor:"CY2912J/CY2914J/CY2916J/CY2917J", desc:"Food And Body Parts in Goblet A4", cost:"1.83", repeat:true},
+    {item:"95691", vendor:"SF24003/SF24004", desc:"26\" Tombstone Skull RIP A2 (25 PFA)", cost:"2.40", repeat:true},
+    {item:"95658", vendor:"CY2776/CY2778", desc:"BODY PARTS A2", cost:"3.10", repeat:true},
+    {item:"95608", vendor:"KH2022YF11/KH2022YF28", desc:"Fake Door Curtain A2 Printed Non-Woven", cost:"3.10", repeat:true},
+    {item:"95454", vendor:"CG1621/CG1621A", desc:"17in Witch Hat A2", cost:"1.97", repeat:true},
+    {item:"94847", vendor:"HC18-18002/HC18-18004/HC18-18002B", desc:"Hanging Reaper Assortment 18\" A3", cost:"1.14", repeat:true},
+    {item:"94443", vendor:"HC18-13034-1/HC18-13034-2/HC18-16073", desc:"18\" Hanging Ghost - Spooky Top Item", cost:"0.95", repeat:true},
+    {item:"95813", vendor:"ARW19-64/FL24316Q-PFA", desc:"Bag Of Fingers 2Asst(26 PFA)", cost:"0.88", repeat:true},
+    {item:"94859", vendor:"TPY10-1MJ/TPY10-4MJ/TPY10-9MJ", desc:"Creepy Cloth Top Item", cost:"0.70", repeat:true},
+    {item:"81568", vendor:"CG1106A1", desc:"17in Rose-Red w/Glitter Top Item", cost:"0.26", repeat:true},
+    {item:"66945", vendor:"CY2870J-ZJ405G", desc:"28.3\" Animated Rocking House with Doll", cost:"21.05", repeat:true},
+    {item:"67105", vendor:"CY2971J-JM004-1", desc:"13\" Animated Bear Riding Tricycle", cost:"6.88", repeat:true},
+    {item:"66711", vendor:"HY5-46Q", desc:"5 FT Witch Cauldron & Stand", cost:"10.60", repeat:true},
+    {item:"85550", vendor:"HJD11023-AD011T", desc:"4ft Lightup Black Reaper", cost:"4.30", repeat:true},
+    {item:"66621", vendor:"BF25174DDZ-DR08-DC", desc:"98.4\" Animated Haunted Tree", cost:"59.50", repeat:true},
+    {item:"65832", vendor:"WY2493J-ZJ406B", desc:"11\" Tabletop Animated Witch Hat on Books", cost:"7.35", repeat:true},
+    {item:"66703", vendor:"HJD25069-WS850", desc:"8.3 FT Hanging Sonic Clown", cost:"19.95", repeat:true},
+    {item:"95805", vendor:"ARW26Q-44/ARW26Q-45", desc:"15.7\" Hanging Dressed Skeleton A2 (26 PFA)", cost:"1.19", repeat:true},
+    {item:"06501", vendor:"HC15-50", desc:"5in Realistic Rat", cost:"1.50", repeat:true},
+    {item:"66623", vendor:"CG25085J", desc:"9.8\" Fake Rose Bouquet with Spider", cost:"1.20", repeat:true},
+    {item:"78216", vendor:"HC18-18022", desc:"32in Hanging Ghost Top Item", cost:"1.69", repeat:true},
+    {item:"75064", vendor:"LL16028WB", desc:"90IN GIANT GRAY SPIDER", cost:"4.40", repeat:true},
+    {item:"62372", vendor:"FL2020-198-2", desc:"2\" Glow In Dark Eyeballs in Mesh Bag", cost:"0.98", repeat:true},
+    {item:"95737", vendor:"MHY2177-2/MHY2177-1", desc:"3.9\" Creepy Cracked Doll Head Black & White Asst", cost:"0.82", repeat:true},
+    {item:"61709", vendor:"XHY203", desc:"20\" Bloody Hand & Foot", cost:"1.92", repeat:true},
+    {item:"64727", vendor:"FL22465", desc:"197\" Stretch Web Material Top Item", cost:"1.36", repeat:true},
+    {item:"80390", vendor:"CG07-2A1", desc:"17in Black Rose Top Item", cost:"0.37", repeat:true},
+    {item:"95563", vendor:"XWH4367/XWH4497/XWH4499", desc:"21\" Tombstone A3", cost:"1.45", repeat:true},
+    {item:"10256", vendor:"MICS13", desc:"8in Rabbit w/Blue Overalls", cost:"2.00", repeat:true},
+    {item:"10257", vendor:"MICS14", desc:"8in Rabbit W/Pink Dress", cost:"2.00", repeat:true},
+    {item:"10252", vendor:"MICS5", desc:"12in White Rabbit w/Flower Wreath", cost:"3.87", repeat:true}
+  ],
+  "Spirit Halloween": [
+    {item:"63476", vendor:"ARW18-93K", desc:"16\" Hanging Wing Skeleton", cost:"0.95", repeat:false},
+    {item:"65278", vendor:"ARW24K-80", desc:"ASH HANGING SKELETON ANGEL", cost:"1.40", repeat:false},
+    {item:"63847", vendor:"WY2235", desc:"16IN SKELETON W/WINGS", cost:"1.47", repeat:false},
+    {item:"67322", vendor:"ARW600HB", desc:"23.6\" Hanging Devil Skeleton", cost:"2.60", repeat:false},
+    {item:"67088", vendor:"HY3-269", desc:"6.7\" Skeleton Groundbreaker With Pumpkin Head", cost:"1.00", repeat:false},
+    {item:"67089", vendor:"ARW26-96", desc:"6.7\" Skeleton Groundbreaker", cost:"2.57", repeat:false},
+    {item:"64833", vendor:"HY3-215-WS672-IB", desc:"ASH SKULLS STACK LIGHT UP", cost:"6.40", repeat:false},
+    {item:"67401", vendor:"CG25172", desc:"15in Faux Raven Wreath w/Skulls", cost:"4.07", repeat:false},
+    {item:"67436", vendor:"CG26006", desc:"24.8\" Hanging Skull Wreath with Chains", cost:"4.76", repeat:false},
+    {item:"67167", vendor:"HC18-25055-ZJ73-AA", desc:"10.2in Ghost w/Body Light", cost:"2.35", repeat:false},
+    {item:"67326", vendor:"CY2987J", desc:"4.7\" Bloody Cake with Eyeballs", cost:"2.15", repeat:false},
+    {item:"66636", vendor:"CY2942J-B", desc:"3.9\" Bloody Eyeball", cost:"2.90", repeat:false},
+    {item:"66634", vendor:"CY2916J", desc:"3.9\" Food And Body Parts in Goblet", cost:"1.72", repeat:false},
+    {item:"65843", vendor:"CY2778", desc:"TABLE TOP CUTTED BODY PARTS", cost:"2.90", repeat:false},
+    {item:"66703", vendor:"HJD25069-WS850", desc:"8.4FT Hanging Sonic Clown", cost:"19.50", repeat:false},
+    {item:"67405", vendor:"HC18-25062", desc:"35.4in Hanging JOL Scarecrow", cost:"5.40", repeat:false},
+    {item:"66614", vendor:"BF25115-S", desc:"3\" Hanging Pumpkin Man w/Burlap Head", cost:"1.95", repeat:false},
+    {item:"67359", vendor:"HJD26032-J-AD015-EX", desc:"51.2\" Hanging Animated Prisoner", cost:"10.50", repeat:false},
+    {item:"67336", vendor:"HC9-25005-JH001", desc:"25.2in Animated Broom", cost:"5.30", repeat:false},
+    {item:"67460", vendor:"KH2024YF101", desc:"192.9\" Halloween Door Curtain", cost:"11.70", repeat:false},
+    {item:"67463", vendor:"KH2024YF102", desc:"192.9\" Halloween Door Curtain", cost:"11.70", repeat:false},
+    {item:"67464", vendor:"KH2024YF104", desc:"192.9\" Halloween Door Curtain", cost:"11.70", repeat:false},
+    {item:"66047", vendor:"KH2024YF09", desc:"47.2\" Window Curtain", cost:"1.79", repeat:false},
+    {item:"67465", vendor:"KH2024YF60", desc:"47.2\" Curtain-woman", cost:"1.79", repeat:false},
+    {item:"67466", vendor:"KH2024YF78", desc:"78.7\" Door Curtain", cost:"2.80", repeat:false},
+    {item:"67470", vendor:"KH2024YF84", desc:"78.7\" Door Curtain", cost:"2.80", repeat:false},
+    {item:"67467", vendor:"KH2024YF93", desc:"192.9\" Halloween Door Cover", cost:"11.70", repeat:false},
+    {item:"67469", vendor:"KH2025YF52", desc:"70.9in Circus Backdrop", cost:"4.60", repeat:false},
+    {item:"67486", vendor:"HC18-25056S-ZJ501M", desc:"47.2\" Hanging Shaking Pumpkin Man", cost:"9.63", repeat:false},
+    {item:"67087", vendor:"XWH5029-F", desc:"36\" Tombstone - Reaper on Throne", cost:"4.00", repeat:false},
+    {item:"66462", vendor:"XWH4893-F-164", desc:"26\" Tombstone", cost:"2.00", repeat:false},
+    {item:"66460", vendor:"XWH4891-F-164", desc:"26\" Tombstone", cost:"2.00", repeat:false},
+    {item:"66625", vendor:"CG25136", desc:"Black Branch w/3pcs Skull", cost:"0.95", repeat:false},
+    {item:"66626", vendor:"CG25137", desc:"Black Branch w/5 Pcs Skull", cost:"1.45", repeat:false},
+    {item:"67327", vendor:"CY3056J-S-AD229HM", desc:"39.4\" Lightup Eyeball", cost:"7.82", repeat:false},
+    {item:"66368", vendor:"HR130-18", desc:"51\" Hanging Girl", cost:"4.20", repeat:false},
+    {item:"61923", vendor:"HY3-117", desc:"7\" Vinyl Burlap Face Skull", cost:"2.50", repeat:false},
+    {item:"67559", vendor:"LL5-50841", desc:"17.7\" Burlap Clown Head", cost:"3.75", repeat:false},
+    {item:"67560", vendor:"HJD25062-ZJ501M", desc:"Hanging Sonic Burlap Scarecrow", cost:"12.10", repeat:false},
+    {item:"66783", vendor:"BF2721", desc:"7.9\" Hanging Burlap Skull", cost:"1.30", repeat:false},
+    {item:"67607", vendor:"HJD26040-J-WS868W-1", desc:"55.1\" Hanging Sonic Witch", cost:"4.60", repeat:false},
+    {item:"10142", vendor:"CD239150J-1", desc:"70.9\" Santa", cost:"52.50", repeat:false},
+    {item:"63497", vendor:"ARW21-60", desc:"16\" Alien Doll Skeleton", cost:"1.05", repeat:false},
+    {item:"63821", vendor:"ARW23-64-400W", desc:"16\" Devil Skeleton", cost:"1.27", repeat:false},
+    {item:"67633", vendor:"ARW600HB4", desc:"23.6\" Hanging Devil Skeleton - Red", cost:"2.30", repeat:false},
+    {item:"63853", vendor:"CY22075", desc:"Bag of Skulls  (6 PK)", cost:"2.00", repeat:false},
+    {item:"63852", vendor:"CY22074", desc:"Bag of Skulls (12 PK)", cost:"2.50", repeat:false},
+    {item:"67115", vendor:"FL25058Q", desc:"Bag Of Skulls (4\"x2, 2.5\"x4, 1.75\"x5)", cost:"1.61", repeat:false},
+    {item:"66376", vendor:"CG25039", desc:"Halloween Black Rose w/ Skulls", cost:"1.06", repeat:false},
+    {item:"87143", vendor:"CG1108A", desc:"BLACK ROSES W.SKELETON HAND", cost:"0.51", repeat:false},
+    {item:"67388", vendor:"BF26148-ZJ501C-Q", desc:"60.2in Hanging Animated Clown - Black/White", cost:"8.84", repeat:false},
+    {item:"65842", vendor:"CY2776", desc:"Realistic Packaged Parts - Brain", cost:"3.20", repeat:false},
+    {item:"67404", vendor:"HC12-25081Q-AD148D", desc:"47.2in Standing Animated Ghost Lead Dog", cost:"17.95", repeat:false},
+    {item:"67634", vendor:"CG0814A1", desc:"19\" Skull Rose", cost:"0.51", repeat:false},
+    {item:"63476", vendor:"ARW18-93K", desc:"16\" Hanging Wing Skeleton", cost:"0.95", repeat:false},
+    {item:"65278", vendor:"ARW24K-80", desc:"ASH HANGING SKELETON ANGEL", cost:"1.35", repeat:true},
+    {item:"65843", vendor:"CY2778", desc:"Realistic Packaged Parts - Nose", cost:"3.35", repeat:false},
+    {item:"66625", vendor:"CG25136", desc:"Black Branch w/3pcs Skull", cost:"0.95", repeat:false},
+    {item:"66626", vendor:"CG25137", desc:"31.5\" Black Branch w/5 Pcs Skull", cost:"1.56", repeat:false},
+    {item:"67322", vendor:"ARW600HB", desc:"23.6\" Hanging Devil Skeleton", cost:"2.60", repeat:false},
+    {item:"67327", vendor:"CY3056J-S-AD229CF", desc:"39.4\" Lightup Eyeball", cost:"7.82", repeat:false},
+    {item:"63186", vendor:"ARW22-11", desc:"16\" Hanging Skeleton Bride", cost:"1.20", repeat:false},
+    {item:"67708", vendor:"ARW23-17", desc:"15.74\" Skeleton Clown", cost:"1.15", repeat:false},
+    {item:"85276", vendor:"XWH2533", desc:"GT 15IN SKULL BONES TOMBSTONE", cost:"0.65", repeat:true},
+    {item:"66512", vendor:"XWH4850-F-164", desc:"GT 36IN GARDEN WOMAN TOMBSTONE", cost:"3.65", repeat:true},
+    {item:"61665", vendor:"HJD20166-164-ZJ501C", desc:"GT 66IN CLOWN", cost:"10.00", repeat:true},
+    {item:"95753", vendor:"[KH2022YF10-164]x7/[KH2020YF08-164]x5", desc:"GT PPSKU WINDOW COVER", cost:"0.00", repeat:true},
+    {item:"65872", vendor:"KH2022YF10-164", desc:"WINDOW COVER- HANDS", cost:"1.79", repeat:true},
+    {item:"65870", vendor:"KH2020YF08-164", desc:"WINDOW COVER-WOMAN", cost:"1.79", repeat:true}
+  ],
+  "Walmart Canada": [
+    {item:"65107", vendor:"BF2445-K", desc:"HANGING SKELETON", cost:"0.90", repeat:true},
+    {item:"62462", vendor:"ARW21-53", desc:"10.8IN SKELETON", cost:"5.20", repeat:true},
+    {item:"66368", vendor:"HR130-18", desc:"51in Hanging Bloody Eye Doll", cost:"4.10", repeat:false},
+    {item:"67354", vendor:"FL25165Q", desc:"36in Hanging Creepy Doll", cost:"3.80", repeat:false},
+    {item:"67330", vendor:"FL25207S", desc:"29.5in Hanging Pumpkin Face Doll", cost:"3.80", repeat:false},
+    {item:"67558", vendor:"XWH5213-F", desc:"3PK TOMBSTONE SET", cost:"2.85", repeat:false}
+  ],
+  "Walmart USA": [
+    {item:"64745", vendor:"HJD20165WA-ZJ501C", desc:"5FT ANMTD HANG CLWN", cost:"8.25", repeat:true},
+    {item:"64364", vendor:"HC18-22021-AD215B", desc:"20IN SHAKING GHOST", cost:"3.33", repeat:true},
+    {item:"64715", vendor:"FL19106-1S", desc:"WLCM WITCH PRCH BNR", cost:"3.50", repeat:true},
+    {item:"66983", vendor:"HC12-25005QWXDZ-AD291W", desc:"36\" LU GHOST W/BROOM", cost:"6.05", repeat:true},
+    {item:"66988", vendor:"HC18-25053Q", desc:"31.5\" HANGING GHOST", cost:"0.79", repeat:true},
+    {item:"67383", vendor:"XWH5176-F", desc:"6PK TOMBSTONE GOBLYN", cost:"4.49", repeat:true},
+    {item:"65764", vendor:"XWH4699-K", desc:"6PK TOMBSTONE SKULL", cost:"4.49", repeat:true},
+    {item:"66985", vendor:"HC12-25007QWXDZ-AD291WX2", desc:"SET OF STANDING GHOST", cost:"9.10", repeat:true},
+    {item:"67388", vendor:"BF26148-ZJ501C-Q", desc:"60.2in Hanging Animated Clown - Black/White", cost:"8.65", repeat:false},
+    {item:"67389", vendor:"FL26010F", desc:"63\" Wlcm Witch Prch Bnr", cost:"3.50", repeat:false},
+    {item:"67390", vendor:"FL26011F", desc:"63\" Wlcm Witch Prch Bnr", cost:"3.50", repeat:false},
+    {item:"67394", vendor:"HC12-25001QDZ-WS893", desc:"70.9in Standing Light Up Ghost", cost:"13.85", repeat:false},
+    {item:"67397", vendor:"HC12-25065J-AD148X", desc:"39.4in Standing Animated Creepy Bear", cost:"15.85", repeat:false},
+    {item:"67398", vendor:"HC12-25065JW-AD148X", desc:"39.4in Standing Animated Bear w/Balloon", cost:"16.50", repeat:false},
+    {item:"67404", vendor:"HC12-25081Q-AD148D", desc:"47.2in Standing Animated Ghost Lead Dog", cost:"17.85", repeat:false},
+    {item:"65364", vendor:"HC18-23009-WS672W", desc:"60.2in LU Ghost Holding Pumpkin", cost:"8.65", repeat:false},
+    {item:"67167", vendor:"HC18-25055-ZJ73-AA", desc:"10.2in Ghost w/Body Light", cost:"2.45", repeat:false},
+    {item:"67406", vendor:"HC18-25068S-JX21-6", desc:"39.4in Hanging LU Ghost w/JOL", cost:"4.95", repeat:false},
+    {item:"67408", vendor:"HC18-25093-CF25W", desc:"35.4in Hanging LU Ghost - White", cost:"3.90", repeat:false},
+    {item:"67409", vendor:"HC18-25094-CF25W", desc:"35.4in Hanging LU Ghost - Green", cost:"3.90", repeat:false},
+    {item:"67410", vendor:"HC18-25095-CF25W", desc:"35.4in Hanging LU Ghost - Pink", cost:"3.90", repeat:false},
+    {item:"67411", vendor:"HC18-25096-CF25W", desc:"35.4in Hanging LU Ghost - Orange", cost:"3.90", repeat:false},
+    {item:"67412", vendor:"HC18-26001Q", desc:"31.5in Hanging Ghost - Round Eyes", cost:"1.05", repeat:false},
+    {item:"67413", vendor:"HC18-26002Q", desc:"31.5in Hanging Ghost- Smiley Eyes", cost:"1.05", repeat:false},
+    {item:"67414", vendor:"HC18-26003Q", desc:"31.5in Hanging Ghost - Moon Eyes", cost:"1.05", repeat:false},
+    {item:"67416", vendor:"HC9-25002Q-ZJ535NYL", desc:"68.9in Standing Animated Ghost", cost:"21.45", repeat:false},
+    {item:"67417", vendor:"HC9-25002Q-ZJ535NYL-1P", desc:"68.9in Standing Animated Ghost", cost:"21.45", repeat:false},
+    {item:"67336", vendor:"HC9-25005-JH001", desc:"25.2in Animated Broom", cost:"5.50", repeat:false},
+    {item:"67418", vendor:"LL25025", desc:"27.6in Spider - Pink", cost:"1.85", repeat:false},
+    {item:"67419", vendor:"LL25026", desc:"27.6in Spider - Silver white Purple", cost:"1.85", repeat:false},
+    {item:"67421", vendor:"HJD27001-S-ZJ501C", desc:"63in Hanging Shaking Clown w/Chain", cost:"9.20", repeat:false},
+    {item:"67422", vendor:"HJD27002-S-ZJ501C", desc:"66.9in Hanging Shaking Clown", cost:"9.65", repeat:false},
+    {item:"67423", vendor:"HJD27003-S-ZJ501M", desc:"72in Hanging Shaking Pumpkin Man", cost:"11.65", repeat:false},
+    {item:"67429", vendor:"HJD27009-S-ZJ501C", desc:"68.9in Hanging Shaking Clown - Red Hair", cost:"9.85", repeat:false},
+    {item:"67430", vendor:"HJD27010-S-ZJ561W", desc:"47.2in Flying Animated Witch w/Broom", cost:"10.85", repeat:false},
+    {item:"67431", vendor:"HJQQ27001-J-SZ031X", desc:"86.6in Swinging Acrobatic Two Clowns", cost:"16.85", repeat:false},
+    {item:"67432", vendor:"HJQQ27002-J-SZ031X", desc:"82.7in Swinging Acrobatic Clowns & JOL", cost:"16.25", repeat:false},
+    {item:"63660", vendor:"HJQQ22008-ZJ501C", desc:"55in Shaking Swing Clown", cost:"11.10", repeat:false},
+    {item:"62157", vendor:"KH2020LJY90", desc:"Set Of Curtain- Clowns", cost:"2.85", repeat:false},
+    {item:"62153", vendor:"KH2020LJY86", desc:"Set Of Curtain - Creepy Clown Theme", cost:"2.85", repeat:false},
+    {item:"67499", vendor:"FL26012Q-1-JX21-6", desc:"84.6in Hanging LU Ghost - Smiley Face", cost:"5.60", repeat:false},
+    {item:"67500", vendor:"FL26012Q-2-JX21-6", desc:"84.6in Hanging LU Ghost - JOL Face", cost:"5.60", repeat:false},
+    {item:"67501", vendor:"FL26012Q-3-JX21-6", desc:"84.6in Hanging LU Ghost - Moon Eyes", cost:"5.60", repeat:false},
+    {item:"67508", vendor:"XWH5200-F", desc:"18.9in Tombstone Set 6Pk", cost:"3.98", repeat:false},
+    {item:"67509", vendor:"XWH5201-F", desc:"21.1in Tombstone Set 6Pk", cost:"4.49", repeat:false},
+    {item:"67511", vendor:"XWH5203-F", desc:"21.1in Tombstone Set 6Pk", cost:"4.49", repeat:false},
+    {item:"67513", vendor:"XWH5205-F", desc:"21.1in Tombstone Set 6Pk", cost:"4.49", repeat:false},
+    {item:"67515", vendor:"XWH5207-F", desc:"21.1in Tombstone Set 6Pk", cost:"4.49", repeat:false},
+    {item:"67517", vendor:"XWH5209-F", desc:"21.1in Tombstone Set 6Pk", cost:"4.49", repeat:false},
+    {item:"67401", vendor:"CG25172", desc:"15in Faux Raven Wreath w/Skulls", cost:"4.65", repeat:false},
+    {item:"67469", vendor:"KH2025YF52", desc:"71IN CIRCUS BACKDROP", cost:"4.60", repeat:false},
+    {item:"67531", vendor:"CG20229", desc:"23.6in Wreath with Skulls", cost:"5.10", repeat:false},
+    {item:"67502", vendor:"CY3202F", desc:"19.7in Eva Foam Rusty Bear Trap", cost:"3.25", repeat:false},
+    {item:"66703", vendor:"HJD25069-WS850", desc:"8.4FT Hanging Giant Sonic Clown", cost:"20.20", repeat:false},
+    {item:"67545", vendor:"HY3-291AJ", desc:"63in Rustic Skull Garland", cost:"1.85", repeat:false},
+    {item:"67546", vendor:"HY3-290AJ", desc:"63in Spider Attack Tattered Garland", cost:"2.15", repeat:false},
+    {item:"67547", vendor:"HY3-292AJ", desc:"94.5in Clown Head And Bone Garland", cost:"2.95", repeat:false},
+    {item:"67548", vendor:"HY3-287J", desc:"63in Creepy Doll Head Chain Garland", cost:"1.95", repeat:false},
+    {item:"67549", vendor:"TPY2026J-1", desc:"118in Creepy Gauze w/8 Plastic Spiders & 4 Skulls", cost:"2.95", repeat:false},
+    {item:"67550", vendor:"HJD27008A-J", desc:"5FT Hanging Clown w/Black Hair", cost:"5.65", repeat:false},
+    {item:"67551", vendor:"HJD27007A-J", desc:"5FT Hanging Clown w/Orange Hair", cost:"5.65", repeat:false},
+    {item:"67552", vendor:"HJD27006-J-ZJ501C", desc:"5FT Hanging Shaking Clown B/W", cost:"8.25", repeat:false},
+    {item:"67553", vendor:"HJD27005-J-ZJ501C", desc:"5FT Hanging Shaking Pumpkin Clown", cost:"8.25", repeat:false},
+    {item:"66390", vendor:"XWH4833-K", desc:"6PK TOMBSTONES REAPER", cost:"4.49", repeat:false},
+    {item:"63433", vendor:"XWH4444", desc:"6PK TOMBSTONES RIP", cost:"4.49", repeat:false},
+    {item:"67580", vendor:"XWH5214-F", desc:"6PK TOMBSTONE CROSS", cost:"4.49", repeat:false},
+    {item:"67581", vendor:"XWH5215-F", desc:"6PK TOMBSTONE BONES", cost:"4.49", repeat:false},
+    {item:"67469", vendor:"KH2025YF52", desc:"71IN CIRCUS BACKDROP", cost:"4.60", repeat:false},
+    {item:"67548", vendor:"HY3-287J", desc:"63IN SKULL GARLAND", cost:"1.95", repeat:false},
+    {item:"66635", vendor:"CY2917J", desc:"3.5IN BLOODY DESSERT CUP W/BONE", cost:"2.24", repeat:false},
+    {item:"66634", vendor:"CY2916J", desc:"3.5IN BLOODY DESSERT CUP", cost:"2.24", repeat:false},
+    {item:"66633", vendor:"CY2914J", desc:"6IN BLOODY PARFAIT", cost:"2.27", repeat:false},
+    {item:"66632", vendor:"CY2912J", desc:"6IN BLOODY COCKTAIL", cost:"2.27", repeat:false},
+    {item:"95650", vendor:"HY5-10/HY5-11", desc:"IRON HOOK A2", cost:"2.42", repeat:false},
+    {item:"67326", vendor:"CY2987J", desc:"5IN BLOODY CAKE", cost:"2.51", repeat:false},
+    {item:"95784", vendor:"CY2776/CY2778", desc:"BODY PART TRAY A2", cost:"3.49", repeat:false},
+    {item:"67205", vendor:"FL25097Q", desc:"BAG OF FAUX EYES", cost:"1.00", repeat:false},
+    {item:"67636", vendor:"HJD27011W-ZJ501C", desc:"5.7FT SHAKING CLOWN", cost:"8.46", repeat:false},
+    {item:"67637", vendor:"XWH5216-F", desc:"6PK TOMBSTONE PUMPKIN", cost:"4.49", repeat:false}
+  ]
+};
+
+const customerSelect = document.getElementById('customer');
+const grid = document.getElementById('grid');
+const search = document.getElementById('search');
+const countEl = document.getElementById('count');
+const emptyEl = document.getElementById('empty');
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightbox-img');
+const lightboxCap = document.getElementById('lightbox-cap');
+
+const placeholderOpt = document.createElement('option');
+placeholderOpt.value = '';
+placeholderOpt.textContent = 'Select customer…';
+customerSelect.appendChild(placeholderOpt);
+
+Object.keys(dataByCustomer).sort((a,b)=>a.localeCompare(b)).forEach(name => {
+  const opt = document.createElement('option');
+  opt.value = name;
+  opt.textContent = name;
+  customerSelect.appendChild(opt);
+});
+customerSelect.value = '';
+
+function currentProducts(){
+  return dataByCustomer[customerSelect.value] || [];
+}
+
+function render(){
+  if (!customerSelect.value){
+    grid.innerHTML = '';
+    countEl.textContent = '';
+    emptyEl.textContent = 'Please select a customer';
+    emptyEl.style.display = 'block';
+    return;
+  }
+
+  const q = search.value.trim().toLowerCase();
+  const source = currentProducts();
+  const list = !q ? source : source.filter(p =>
+    p.item.toLowerCase().includes(q) ||
+    p.vendor.toLowerCase().includes(q) ||
+    p.desc.toLowerCase().includes(q)
+  );
+
+  emptyEl.textContent = 'No matching items';
+  grid.innerHTML = '';
+  list.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="status-badge ${p.repeat ? 'repeat' : 'new'}">${p.repeat ? 'Repeat' : 'New'}</div>
+      <div class="thumb">
+        <img src="assets/gti_images/${p.item}.jpg" alt="${p.item}" loading="lazy"
+             onerror="this.parentElement.classList.add('noimg'); this.remove();">
+      </div>
+      <div class="info">
+        <div class="sku">#${p.item}</div>
+        <div class="vendor">${p.vendor}</div>
+        <div class="desc">${p.desc}</div>
+        <div class="cost">Cost: <b>$${p.cost}</b></div>
+      </div>`;
+    card.querySelector('.thumb').addEventListener('click', () => openLightbox(p));
+    grid.appendChild(card);
+  });
+  countEl.textContent = list.length + ' items';
+  emptyEl.style.display = list.length ? 'none' : 'block';
+}
+
+function openLightbox(p){
+  lightboxImg.src = `assets/gti_images/${p.item}.jpg`;
+  lightboxCap.innerHTML = `<b>#${p.item}</b>&nbsp; ${p.repeat ? 'Repeat' : 'New'} &middot; ${p.vendor} &middot; ${p.desc} &middot; $${p.cost}`;
+  lightbox.classList.add('open');
+}
+lightbox.addEventListener('click', () => lightbox.classList.remove('open'));
+
+customerSelect.addEventListener('change', render);
+search.addEventListener('input', render);
+
+render();
+</script>
+
+</body>
+</html>
